@@ -16,6 +16,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'Softtrack Здоровье'),
+      routes: {
+        '/water': (context) => const WaterActivity()
+      }
     );
   }
 }
@@ -28,11 +31,44 @@ class MyHomePage extends StatefulWidget {
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
+
 }
 
 class _MyHomePageState extends State<MyHomePage> {
 
   int currentTab = 0;
+  int glassesCount = 0;
+  late Color removeGlassesBtnColor;
+  Color disabledGlassesBtnColor = Color.fromARGB(127, 150, 150, 150);
+  Color enabledGlassesBtnColor = Color.fromARGB(255, 150, 150, 150);
+
+  void addGlass() {
+    setState(() {
+      removeGlassesBtnColor = enabledGlassesBtnColor;
+      glassesCount++;
+    });
+  }
+
+  void removeGlass() {
+    bool isGlassesCountEmpty = glassesCount <= 0;
+    bool isGlassesCountNotEmpty = !isGlassesCountEmpty;
+    if (isGlassesCountNotEmpty) {
+      setState(() {
+        glassesCount--;
+        isGlassesCountEmpty = glassesCount <= 0;
+        if (isGlassesCountEmpty) {
+          // делаем кнопку disabled
+          removeGlassesBtnColor = Color.fromARGB(127, 150, 150, 150);
+        }
+      });
+    }
+  }
+
+  @override
+  initState() {
+    super.initState();
+    removeGlassesBtnColor = enabledGlassesBtnColor;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -229,9 +265,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                         children: [
                                           Text(
                                             '0%'
-                                          ),
-                                          LinearProgressIndicator(
-
                                           )
                                         ]
                                       )
@@ -663,16 +696,20 @@ class _MyHomePageState extends State<MyHomePage> {
                             padding: EdgeInsets.all(
                                 15
                             ),
-                            child: Column(
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(context, '/water');
+                              },
+                              child: Column(
                                 children: [
                                   Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        Icon(
-                                          Icons.remove_circle,
-                                          color: Color.fromARGB(255, 255, 0, 0),
-                                        )
-                                      ]
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Icon(
+                                        Icons.remove_circle,
+                                        color: Color.fromARGB(255, 255, 0, 0),
+                                      )
+                                    ]
                                   ),
                                   Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -680,94 +717,102 @@ class _MyHomePageState extends State<MyHomePage> {
                                         Column(
                                             children: [
                                               Text(
-                                                  'Вода',
-                                                  style: TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 18
-                                                  )
+                                                'Вода',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18
+                                                )
                                               ),
                                               Row(
-                                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                                  children: [
-                                                    Text(
-                                                        '0',
-                                                        style: TextStyle(
-                                                            fontWeight: FontWeight.bold,
-                                                            fontSize: 28
-                                                        )
-                                                    ),
-                                                    Container(
-                                                        margin: EdgeInsets.symmetric(
-                                                            horizontal: 5
-                                                        ),
-                                                        child: Text(
-                                                            'стак.'
-                                                        )
+                                                crossAxisAlignment: CrossAxisAlignment.end,
+                                                children: [
+                                                  Text(
+                                                    '$glassesCount',
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 28
                                                     )
-                                                  ]
+                                                  ),
+                                                  Container(
+                                                      margin: EdgeInsets.symmetric(
+                                                        horizontal: 5
+                                                      ),
+                                                      child: Text(
+                                                        'стак.'
+                                                      )
+                                                  )
+                                                ]
                                               )
                                             ]
                                         ),
                                         Row(
-                                            children: [
-                                              TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pushNamed(context, '/add_alarm');
-                                                  },
-                                                  child: Icon(
-                                                      Icons.add
-                                                  ),
-                                                  style: ButtonStyle(
-                                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                                          RoundedRectangleBorder(
-                                                              borderRadius: BorderRadius.circular(100.0),
-                                                              side: BorderSide(
-                                                                  color: Color.fromARGB(255, 150, 150, 150)
-                                                              )
-                                                          )
-                                                      ),
-                                                      fixedSize: MaterialStateProperty.all<Size>(
-                                                          Size(
-                                                              45.0,
-                                                              45.0
-                                                          )
+                                          children: [
+                                            Container(
+                                              child: TextButton(
+
+                                                onPressed: () {
+                                                  removeGlass();
+                                                },
+                                                child: Icon(
+                                                  Icons.remove
+                                                ),
+                                                style: ButtonStyle(
+                                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                                    RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(100.0),
+                                                      side: BorderSide(
+                                                        color: removeGlassesBtnColor
                                                       )
+                                                    )
+                                                  ),
+                                                  fixedSize: MaterialStateProperty.all<Size>(
+                                                    Size(
+                                                      45.0,
+                                                      45.0
+                                                    )
+                                                  ),
+                                                  foregroundColor: MaterialStateProperty.all<Color>(
+                                                    removeGlassesBtnColor
                                                   )
+                                                )
                                               ),
-                                              Container(
-                                                  child: TextButton(
-                                                      onPressed: () {
-                                                        Navigator.pushNamed(context, '/add_alarm');
-                                                      },
-                                                      child: Icon(
-                                                          Icons.remove
-                                                      ),
-                                                      style: ButtonStyle(
-                                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                                              RoundedRectangleBorder(
-                                                                  borderRadius: BorderRadius.circular(100.0),
-                                                                  side: BorderSide(
-                                                                      color: Color.fromARGB(255, 150, 150, 150)
-                                                                  )
-                                                              )
-                                                          ),
-                                                          fixedSize: MaterialStateProperty.all<Size>(
-                                                              Size(
-                                                                  45.0,
-                                                                  45.0
-                                                              )
-                                                          )
-                                                      )
-                                                  ),
-                                                  margin: EdgeInsets.all(
-                                                      15
-                                                  )
+                                              margin: EdgeInsets.all(
+                                                15
                                               )
-                                            ]
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                addGlass();
+                                              },
+                                              child: Icon(
+                                                  Icons.add
+                                              ),
+                                              style: ButtonStyle(
+                                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                                  RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(100.0),
+                                                    side: BorderSide(
+                                                      color: Color.fromARGB(255, 150, 150, 150)
+                                                    )
+                                                  )
+                                                ),
+                                                fixedSize: MaterialStateProperty.all<Size>(
+                                                  Size(
+                                                    45.0,
+                                                    45.0
+                                                  )
+                                                ),
+                                                foregroundColor: MaterialStateProperty.all<Color>(
+                                                  Color.fromARGB(255, 150, 150, 150)
+                                                )
+                                              )
+                                            )
+                                          ]
                                         )
                                       ]
                                   )
                                 ]
+                              )
                             )
                         )
                       ]
@@ -3327,4 +3372,159 @@ class _MyHomePageState extends State<MyHomePage> {
       )
     );
   }
+}
+
+class WaterActivity extends StatefulWidget {
+
+  const WaterActivity({Key? key}) : super(key: key);
+
+  @override
+  State<WaterActivity> createState() => _WaterActivityState();
+
+}
+
+class _WaterActivityState extends State<WaterActivity> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+
+      ]
+    );
+  }
+
+}
+
+class BodyActivity extends StatefulWidget {
+
+  const BodyActivity({Key? key}) : super(key: key);
+
+  @override
+  State<BodyActivity> createState() => _BodyActivityState();
+
+}
+
+class _BodyActivityState extends State<BodyActivity> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        children: [
+
+        ]
+    );
+  }
+
+}
+
+class SleepActivity extends StatefulWidget {
+
+  const SleepActivity({Key? key}) : super(key: key);
+
+  @override
+  State<SleepActivity> createState() => _SleepActivityState();
+
+}
+
+class _SleepActivityState extends State<SleepActivity> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        children: [
+
+        ]
+    );
+  }
+
+}
+
+class FoodActivity extends StatefulWidget {
+
+  const FoodActivity({Key? key}) : super(key: key);
+
+  @override
+  State<FoodActivity> createState() => _FoodActivityState();
+
+}
+
+class _FoodActivityState extends State<FoodActivity> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        children: [
+
+        ]
+    );
+  }
+
+}
+
+class ExerciseActivity extends StatefulWidget {
+
+  const ExerciseActivity({Key? key}) : super(key: key);
+
+  @override
+  State<ExerciseActivity> createState() => _ExerciseActivityState();
+
+}
+
+class _ExerciseActivityState extends State<ExerciseActivity> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        children: [
+
+        ]
+    );
+  }
+
+}
+
+
+class WalkActivity extends StatefulWidget {
+
+  const WalkActivity({Key? key}) : super(key: key);
+
+  @override
+  State<WalkActivity> createState() => _WalkActivityState();
+
+}
+
+class _WalkActivityState extends State<WalkActivity> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        children: [
+
+        ]
+    );
+  }
+
+}
+
+class ActiveActivity extends StatefulWidget {
+
+  const ActiveActivity({Key? key}) : super(key: key);
+
+  @override
+  State<ActiveActivity> createState() => _ActiveActivityState();
+
+}
+
+class _ActiveActivityState extends State<ActiveActivity> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        children: [
+
+        ]
+    );
+  }
+
 }
