@@ -70,11 +70,992 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         body: TabBarView(
           children: <Widget>[
-            Column(
+            SingleChildScrollView(
+              child:             Container(
+                  decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 225, 225, 225)
+                  ),
+                  child: Column(
+                      children: [
+                        Container(
+                            margin: EdgeInsets.symmetric(
+                                vertical: 15
+                            ),
+                            padding: EdgeInsets.all(
+                                15
+                            ),
+                            decoration: BoxDecoration(
+                                color: Color.fromARGB(255, 255, 255, 255)
+                            ),
+                            child: Column(
+                                children: [
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Icon(
+                                          Icons.remove_circle,
+                                          color: Color.fromARGB(255, 255, 0, 0),
+                                        )
+                                      ]
+                                  ),
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                            children: [
+                                              Container(
+                                                  margin: EdgeInsets.symmetric(
+                                                      vertical: 15
+                                                  ),
+                                                  child: Text(
+                                                      'Активность',
+                                                      style: TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 20
+                                                      )
+                                                  )
+                                              ),
+                                              Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Container(
+                                                        margin: EdgeInsets.symmetric(
+                                                            horizontal: 10
+                                                        ),
+                                                        child: Column(
+                                                            children: [
+                                                              Icon(
+                                                                  Icons.directions_walk,
+                                                                  color: Color.fromARGB(255, 0, 150, 0)
+                                                              ),
+                                                              Text(
+                                                                  '0'
+                                                              )
+                                                            ]
+                                                        )
+                                                    ),
+                                                    Container(
+                                                        margin: EdgeInsets.symmetric(
+                                                            horizontal: 10
+                                                        ),
+                                                        child: Column(
+                                                            children: [
+                                                              Icon(
+                                                                  Icons.timer,
+                                                                  color: Color.fromARGB(255, 0, 0, 255)
+                                                              ),
+                                                              Text(
+                                                                  '0'
+                                                              )
+                                                            ]
+                                                        )
+                                                    ),
+                                                    Container(
+                                                        margin: EdgeInsets.symmetric(
+                                                            horizontal: 10
+                                                        ),
+                                                        child: Column(
+                                                            children: [
+                                                              Icon(
+                                                                  Icons.fireplace,
+                                                                  color: Color.fromARGB(255, 255, 0, 0)
+                                                              ),
+                                                              Text(
+                                                                  '0'
+                                                              )
+                                                            ]
+                                                        )
+                                                    )
+                                                  ]
+                                              )
+                                            ]
+                                        ),
+                                        Image.network(
+                                            'https://cdn4.iconfinder.com/data/icons/medical-115/60/medical-flat-098-heart-beat-128.png',
+                                            width: 65
+                                        )
+                                      ]
+                                  )
+                                ]
+                            )
+                        ),
+                        Container(
+                            decoration: BoxDecoration(
+                              color: Color.fromARGB(255, 255, 255, 255)
+                            ),
+                            padding: EdgeInsets.all(
+                                15
+                            ),
+                            margin: EdgeInsets.symmetric(
+                              vertical: 15
+                            ),
+                            child: Column(
+                                children: [
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Icon(
+                                          Icons.remove_circle,
+                                          color: Color.fromARGB(255, 255, 0, 0),
+                                        )
+                                      ]
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        children: [
+                                          Text(
+                                            'Шаги'
+                                          ),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                child: Text(
+                                                  '0',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold
+                                                  )
+                                                )
+                                              ),
+                                              Text(
+                                                '/6000'
+                                              )
+                                            ]
+                                          )
+                                        ]
+                                      ),
+                                      Column(
+                                        children: [
+                                          Text(
+                                            '0%'
+                                          ),
+                                          LinearProgressIndicator(
 
+                                          )
+                                        ]
+                                      )
+                                    ]
+                                  )
+                                ]
+                            )
+                        ),
+                        Container(
+                          padding: EdgeInsets.all(
+                            15
+                          ),
+                          margin: EdgeInsets.symmetric(
+                              vertical: 15
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(255, 255, 255, 255)
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Icon(
+                                      Icons.remove_circle,
+                                      color: Color.fromARGB(255, 255, 0, 0),
+                                    )
+                                  ]
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                  Text(
+                                    'Упражнение',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold
+                                    )
+                                  ),
+                                  Text(
+                                    'Посмотреть журнал',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(255, 150, 150, 150)
+                                      )
+                                  )
+                                ]
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  TextButton(
+                                    style: ButtonStyle(
+                                      backgroundColor: MaterialStateProperty.all<Color>(
+                                        Color.fromARGB(255, 255, 255, 255)
+                                      ),
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(100.0),
+                                          side: BorderSide(
+                                            color: Color.fromARGB(255, 150, 150, 150)
+                                          )
+                                        )
+                                      ),
+                                      fixedSize: MaterialStateProperty.all<Size>(
+                                        Size(
+                                          45.0,
+                                          45.0
+                                        )
+                                      )
+                                    ),
+                                    onPressed: () {
+                                                                
+                                    },
+                                    child: Icon(
+                                      Icons.directions_walk
+                                    )
+                                  ),
+                                  TextButton(
+                                      style: ButtonStyle(
+                                          backgroundColor: MaterialStateProperty.all<Color>(
+                                              Color.fromARGB(255, 255, 255, 255)
+                                          ),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(100.0),
+                                                  side: BorderSide(
+                                                      color: Color.fromARGB(255, 150, 150, 150)
+                                                  )
+                                              )
+                                          ),
+                                          fixedSize: MaterialStateProperty.all<Size>(
+                                              Size(
+                                                  45.0,
+                                                  45.0
+                                              )
+                                          )
+                                      ),
+                                      onPressed: () {
+
+                                      },
+                                      child: Icon(
+                                          Icons.directions_run
+                                      )
+                                  ),
+                                  TextButton(
+                                      style: ButtonStyle(
+                                          backgroundColor: MaterialStateProperty.all<Color>(
+                                              Color.fromARGB(255, 255, 255, 255)
+                                          ),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(100.0),
+                                                  side: BorderSide(
+                                                      color: Color.fromARGB(255, 150, 150, 150)
+                                                  )
+                                              )
+                                          ),
+                                          fixedSize: MaterialStateProperty.all<Size>(
+                                              Size(
+                                                  45.0,
+                                                  45.0
+                                              )
+                                          )
+                                      ),
+                                      onPressed: () {
+
+                                      },
+                                      child: Icon(
+                                          Icons.bike_scooter
+                                      )
+                                  ),
+                                  TextButton(
+                                      style: ButtonStyle(
+                                          backgroundColor: MaterialStateProperty.all<Color>(
+                                              Color.fromARGB(255, 255, 255, 255)
+                                          ),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(100.0),
+                                                  side: BorderSide(
+                                                      color: Color.fromARGB(255, 150, 150, 150)
+                                                  )
+                                              )
+                                          ),
+                                          fixedSize: MaterialStateProperty.all<Size>(
+                                              Size(
+                                                  45.0,
+                                                  45.0
+                                              )
+                                          )
+                                      ),
+                                      onPressed: () {
+
+                                      },
+                                      child: Icon(
+                                          Icons.list
+                                      )
+                                  )
+                                ]
+                              )
+                            ]
+                          )
+                        ),
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
+                          ),
+                          padding: EdgeInsets.all(
+                            25
+                          ),
+                          decoration: BoxDecoration(
+                              color: Color.fromARGB(255, 255, 255, 255)
+                          ),
+                          child: Column(
+                              children: [
+                                Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Icon(
+                                        Icons.remove_circle,
+                                        color: Color.fromARGB(255, 255, 0, 0),
+                                      )
+                                    ]
+                                ),
+                                Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                                'Еда',
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 20
+                                                )
+                                            ),
+                                            Row(
+                                                children: [
+                                                  Container(
+                                                    margin: EdgeInsets.symmetric(
+                                                      horizontal: 10
+                                                    ),
+                                                    child: Text(
+                                                      '0',
+                                                      style: TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                          fontSize: 28
+                                                      )
+                                                    ) 
+                                                  ),
+                                                  Text(
+                                                    '/1779 ккал'
+                                                  )
+                                                ]
+                                            )
+                                          ]
+                                      ),
+                                      TextButton(
+                                          onPressed: () {
+
+                                          },
+                                          child: Text(
+                                              'Запись'
+                                          ),
+                                          style: ButtonStyle(
+                                              foregroundColor: MaterialStateProperty.all<Color>(
+                                                  Color.fromARGB(255, 0, 0, 0)
+                                              ),
+                                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                                  RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(100.0),
+                                                      side: BorderSide(
+                                                          color: Color.fromARGB(255, 150, 150, 150)
+                                                      )
+                                                  )
+                                              ),
+                                              fixedSize: MaterialStateProperty.all<Size>(
+                                                  Size(
+                                                      125.0,
+                                                      45.0
+                                                  )
+                                              )
+                                          )
+                                      )
+                                    ]
+                                )
+                              ]
+                          )
+                        ),
+                        Container(
+                            padding: EdgeInsets.all(
+                                25
+                            ),
+                            margin: EdgeInsets.symmetric(
+                              vertical: 15
+                            ),
+                            decoration: BoxDecoration(
+                                color: Color.fromARGB(255, 255, 255, 255)
+                            ),
+                            child: Column(
+                                children: [
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Icon(
+                                          Icons.remove_circle,
+                                          color: Color.fromARGB(255, 255, 0, 0),
+                                        )
+                                      ]
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Сон',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20
+                                            )
+                                          ),
+                                          Text(
+                                              'Как вам спалось'
+                                          )
+                                        ]
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+
+                                        },
+                                        child: Text(
+                                          'Запись'
+                                        ),
+                                        style: ButtonStyle(
+                                          foregroundColor: MaterialStateProperty.all<Color>(
+                                            Color.fromARGB(255, 0, 0, 0)
+                                          ),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(100.0),
+                                              side: BorderSide(
+                                                color: Color.fromARGB(255, 150, 150, 150)
+                                              )
+                                            )
+                                          ),
+                                          fixedSize: MaterialStateProperty.all<Size>(
+                                            Size(
+                                              125.0,
+                                              45.0
+                                            )
+                                          )
+                                        )
+                                      )
+                                    ]
+                                  )
+                                ]
+                            )
+                        ),
+                        Container(
+                            padding: EdgeInsets.all(
+                                15
+                            ),
+                            margin: EdgeInsets.symmetric(
+                                vertical: 15
+                            ),
+                            decoration: BoxDecoration(
+                                color: Color.fromARGB(255, 255, 255, 255)
+                            ),
+                            child: Column(
+                                children: [
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Icon(
+                                          Icons.remove_circle,
+                                          color: Color.fromARGB(255, 255, 0, 0),
+                                        )
+                                      ]
+                                  ),
+                                  Container(
+                                      child: Text(
+                                          'Состав тела',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20
+                                          )
+                                      ),
+                                      margin: EdgeInsets.symmetric(
+                                          vertical: 15
+                                      )
+                                  ),
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Container(
+                                            margin: EdgeInsets.symmetric(
+                                                horizontal: 10
+                                            ),
+                                            child: Column(
+                                                children: [
+                                                  Icon(
+                                                      Icons.home,
+                                                      color: Color.fromARGB(255, 0, 150, 0)
+                                                  ),
+                                                  Text(
+                                                      '0',
+                                                      style: TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 24
+                                                      )
+                                                  )
+                                                ]
+                                            )
+                                        ),
+                                        Container(
+                                            margin: EdgeInsets.symmetric(
+                                                horizontal: 10
+                                            ),
+                                            child: Column(
+                                                children: [
+                                                  Icon(
+                                                      Icons.circle,
+                                                      color: Colors.brown
+                                                  ),
+                                                  Text(
+                                                      '0',
+                                                      style: TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 24
+                                                      )
+                                                  )
+                                                ]
+                                            )
+                                        ),
+                                        Container(
+                                            margin: EdgeInsets.symmetric(
+                                                horizontal: 10
+                                            ),
+                                            child: Column(
+                                                children: [
+                                                  Icon(
+                                                      Icons.sports_rugby,
+                                                      color: Color.fromARGB(255, 0, 0, 255)
+                                                  ),
+                                                  Text(
+                                                      '0',
+                                                      style: TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 24
+                                                      )
+                                                  )
+                                                ]
+                                            )
+                                        )
+                                      ]
+                                  )
+                                ]
+                            )
+                        ),
+                        Container(
+                            decoration: BoxDecoration(
+                                color: Color.fromARGB(255, 255, 255, 255)
+                            ),
+                            padding: EdgeInsets.all(
+                                15
+                            ),
+                            child: Column(
+                                children: [
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Icon(
+                                          Icons.remove_circle,
+                                          color: Color.fromARGB(255, 255, 0, 0),
+                                        )
+                                      ]
+                                  ),
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                            children: [
+                                              Text(
+                                                  'Вода',
+                                                  style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 18
+                                                  )
+                                              ),
+                                              Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                  children: [
+                                                    Text(
+                                                        '0',
+                                                        style: TextStyle(
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 28
+                                                        )
+                                                    ),
+                                                    Container(
+                                                        margin: EdgeInsets.symmetric(
+                                                            horizontal: 5
+                                                        ),
+                                                        child: Text(
+                                                            'стак.'
+                                                        )
+                                                    )
+                                                  ]
+                                              )
+                                            ]
+                                        ),
+                                        Row(
+                                            children: [
+                                              TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pushNamed(context, '/add_alarm');
+                                                  },
+                                                  child: Icon(
+                                                      Icons.add
+                                                  ),
+                                                  style: ButtonStyle(
+                                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                                          RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(100.0),
+                                                              side: BorderSide(
+                                                                  color: Color.fromARGB(255, 150, 150, 150)
+                                                              )
+                                                          )
+                                                      ),
+                                                      fixedSize: MaterialStateProperty.all<Size>(
+                                                          Size(
+                                                              45.0,
+                                                              45.0
+                                                          )
+                                                      )
+                                                  )
+                                              ),
+                                              Container(
+                                                  child: TextButton(
+                                                      onPressed: () {
+                                                        Navigator.pushNamed(context, '/add_alarm');
+                                                      },
+                                                      child: Icon(
+                                                          Icons.remove
+                                                      ),
+                                                      style: ButtonStyle(
+                                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                                              RoundedRectangleBorder(
+                                                                  borderRadius: BorderRadius.circular(100.0),
+                                                                  side: BorderSide(
+                                                                      color: Color.fromARGB(255, 150, 150, 150)
+                                                                  )
+                                                              )
+                                                          ),
+                                                          fixedSize: MaterialStateProperty.all<Size>(
+                                                              Size(
+                                                                  45.0,
+                                                                  45.0
+                                                              )
+                                                          )
+                                                      )
+                                                  ),
+                                                  margin: EdgeInsets.all(
+                                                      15
+                                                  )
+                                              )
+                                            ]
+                                        )
+                                      ]
+                                  )
+                                ]
+                            )
+                        )
+                      ]
+                  )
+              )
             ),
-            Column(
-
+            Container(
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 225, 225, 225)
+              ), 
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Image.network(
+                        'https://cdn2.iconfinder.com/data/icons/flat-seo-web-ikooni/128/flat_seo-40-256.png',
+                        width: 50,
+                        height: 50
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            'glebdyakov',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold
+                            )
+                          ),
+                          Text(
+                            'Уровень 1',
+                            style: TextStyle(
+                              fontSize: 20
+                            )
+                          )
+                        ]
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/add_alarm');
+                        },
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.flag_outlined
+                            ),
+                            Text(
+                                'Задачи'
+                            )
+                          ]
+                        ),
+                        style: ButtonStyle(
+                            foregroundColor: MaterialStateProperty.all(
+                                Color.fromARGB(255, 0, 0, 0)
+                            ),
+                            backgroundColor: MaterialStateProperty.all(
+                                Color.fromARGB(255, 200, 200, 200)
+                            ),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18.0),
+                                    side: BorderSide(
+                                        color: Colors.transparent
+                                    )
+                                )
+                            )
+                        )
+                      )
+                    ]
+                  ),
+                  Container(
+                    margin: EdgeInsets.symmetric(
+                      vertical: 15
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 15
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)  
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Друзья',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18
+                              )
+                            ),
+                            Container(
+                              margin: EdgeInsets.symmetric(
+                                vertical: 0,
+                                horizontal: 5
+                              ),
+                              child: Text(
+                                '0',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Color.fromARGB(255, 0, 100, 0)
+                                )
+                              )
+                            )
+                          ]
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/add_alarm');
+                          },
+                          child: Text(
+                            'Добавить'
+                          ),
+                          style: ButtonStyle(
+                              foregroundColor: MaterialStateProperty.all(
+                                  Color.fromARGB(255, 0, 0, 0)
+                              ),
+                              backgroundColor: MaterialStateProperty.all(
+                                  Color.fromARGB(255, 200, 200, 200)
+                              ),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18.0),
+                                  side: BorderSide(
+                                    color: Colors.transparent
+                                  )
+                                )
+                              )
+                          )
+                        )
+                      ]
+                    )
+                  ),
+                  Container(
+                    margin: EdgeInsets.symmetric(
+                      vertical: 15
+                    ),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 15
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '#Stronger Together',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18 
+                          )
+                        ),
+                        Text(
+                          'Присоединяйтесь к соревнованию, чтобы подде...'
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Участники',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold
+                                  )
+                                ),
+                                Text(
+                                  '0',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 24
+                                  )
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pushNamed(context, '/add_alarm');
+                                  },
+                                  child: Text(
+                                      'Присоединиться'
+                                  ),
+                                  style: ButtonStyle(
+                                    foregroundColor: MaterialStateProperty.all(
+                                      Color.fromARGB(255, 0, 0, 0)
+                                    ),
+                                    backgroundColor: MaterialStateProperty.all(
+                                      Color.fromARGB(255, 200, 200, 200)
+                                    ),
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(18.0),
+                                        side: BorderSide(
+                                          color: Colors.transparent
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              ]
+                            ),
+                            Image.network(
+                              'https://live.staticflickr.com/7050/8690945256_35b26a6738_b.jpg',
+                              width: 100,
+                              height: 100
+                            )
+                          ]
+                        ),
+                      ]
+                    )
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)  
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 15
+                    ),
+                    margin: EdgeInsets.symmetric(
+                        vertical: 15
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Спа февраль',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18
+                          )
+                        ),
+                        Text(
+                          'Присоединяйтесь к соревнованию, чтобы\nподдерживать форму вместе с другими.'
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Участники',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold
+                                  )
+                                ),
+                                Text(
+                                  '0',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 24
+                                  )
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pushNamed(context, '/add_alarm');
+                                  },
+                                  child: Text(
+                                    'Присоединиться'
+                                  ),
+                                  style: ButtonStyle(
+                                    foregroundColor: MaterialStateProperty.all(
+                                      Color.fromARGB(255, 0, 0, 0)
+                                    ),
+                                    backgroundColor: MaterialStateProperty.all(
+                                      Color.fromARGB(255, 200, 200, 200)
+                                    ),
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(18.0),
+                                        side: BorderSide(
+                                          color: Colors.transparent
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              ]
+                            ),
+                            Image.network(
+                              'https://live.staticflickr.com/7050/8690945256_35b26a6738_b.jpg',
+                              width: 100,
+                              height: 100
+                            )
+                          ]
+                        ),
+                      ]
+                    )
+                  )
+                ]
+              )
             ),
             SingleChildScrollView(
               child: Container(
