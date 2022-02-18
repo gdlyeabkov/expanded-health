@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,6 +20,15 @@ class MyApp extends StatelessWidget {
       ),
       home: const MyHomePage(title: 'Softtrack Здоровье'),
       routes: {
+        '/main': (context) => const MyHomePage(
+          title: 'Softtrack здоровье'
+        ),
+        '/active': (context) => const ActiveActivity(),
+        '/walk': (context) => const WalkActivity(),
+        '/exercise': (context) => const ExerciseActivity(),
+        '/food': (context) => const FoodActivity(),
+        '/sleep': (context) => const SleepActivity(),
+        '/body': (context) => const BodyActivity(),
         '/water': (context) => const WaterActivity()
       }
     );
@@ -107,173 +119,187 @@ class _MyHomePageState extends State<MyHomePage> {
         body: TabBarView(
           children: <Widget>[
             SingleChildScrollView(
-              child:             Container(
+              child: Container(
                   decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 225, 225, 225)
+                    color: Color.fromARGB(255, 225, 225, 225)
                   ),
                   child: Column(
-                      children: [
-                        Container(
-                            margin: EdgeInsets.symmetric(
-                                vertical: 15
-                            ),
-                            padding: EdgeInsets.all(
-                                15
-                            ),
-                            decoration: BoxDecoration(
-                                color: Color.fromARGB(255, 255, 255, 255)
-                            ),
-                            child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/active');
+                        },
+                        child: Container(
+                          margin: EdgeInsets.symmetric(
+                              vertical: 15
+                          ),
+                          padding: EdgeInsets.all(
+                              15
+                          ),
+                          decoration: BoxDecoration(
+                              color: Color.fromARGB(255, 255, 255, 255)
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        Icon(
-                                          Icons.remove_circle,
-                                          color: Color.fromARGB(255, 255, 0, 0),
-                                        )
-                                      ]
-                                  ),
-                                  Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                            children: [
-                                              Container(
-                                                  margin: EdgeInsets.symmetric(
-                                                      vertical: 15
-                                                  ),
-                                                  child: Text(
-                                                      'Активность',
-                                                      style: TextStyle(
-                                                          fontWeight: FontWeight.bold,
-                                                          fontSize: 20
-                                                      )
-                                                  )
-                                              ),
-                                              Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: [
-                                                    Container(
-                                                        margin: EdgeInsets.symmetric(
-                                                            horizontal: 10
-                                                        ),
-                                                        child: Column(
-                                                            children: [
-                                                              Icon(
-                                                                  Icons.directions_walk,
-                                                                  color: Color.fromARGB(255, 0, 150, 0)
-                                                              ),
-                                                              Text(
-                                                                  '0'
-                                                              )
-                                                            ]
-                                                        )
-                                                    ),
-                                                    Container(
-                                                        margin: EdgeInsets.symmetric(
-                                                            horizontal: 10
-                                                        ),
-                                                        child: Column(
-                                                            children: [
-                                                              Icon(
-                                                                  Icons.timer,
-                                                                  color: Color.fromARGB(255, 0, 0, 255)
-                                                              ),
-                                                              Text(
-                                                                  '0'
-                                                              )
-                                                            ]
-                                                        )
-                                                    ),
-                                                    Container(
-                                                        margin: EdgeInsets.symmetric(
-                                                            horizontal: 10
-                                                        ),
-                                                        child: Column(
-                                                            children: [
-                                                              Icon(
-                                                                  Icons.fireplace,
-                                                                  color: Color.fromARGB(255, 255, 0, 0)
-                                                              ),
-                                                              Text(
-                                                                  '0'
-                                                              )
-                                                            ]
-                                                        )
-                                                    )
-                                                  ]
-                                              )
-                                            ]
-                                        ),
-                                        Image.network(
-                                            'https://cdn4.iconfinder.com/data/icons/medical-115/60/medical-flat-098-heart-beat-128.png',
-                                            width: 65
-                                        )
-                                      ]
+                                  Icon(
+                                    Icons.remove_circle,
+                                    color: Color.fromARGB(255, 255, 0, 0),
                                   )
                                 ]
-                            )
-                        ),
-                        Container(
-                            decoration: BoxDecoration(
-                              color: Color.fromARGB(255, 255, 255, 255)
-                            ),
-                            padding: EdgeInsets.all(
-                                15
-                            ),
-                            margin: EdgeInsets.symmetric(
-                              vertical: 15
-                            ),
-                            child: Column(
-                                children: [
-                                  Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        Icon(
-                                          Icons.remove_circle,
-                                          color: Color.fromARGB(255, 255, 0, 0),
-                                        )
-                                      ]
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
+                              ),
+                              Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
                                         children: [
-                                          Text(
-                                            'Шаги'
+                                          Container(
+                                            margin: EdgeInsets.symmetric(
+                                              vertical: 15
+                                            ),
+                                            child: Text(
+                                              'Активность',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20
+                                              )
+                                            )
                                           ),
                                           Row(
-                                            children: [
-                                              Container(
-                                                child: Text(
-                                                  '0',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold
-                                                  )
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Container(
+                                                    margin: EdgeInsets.symmetric(
+                                                        horizontal: 10
+                                                    ),
+                                                    child: Column(
+                                                        children: [
+                                                          Icon(
+                                                              Icons.directions_walk,
+                                                              color: Color.fromARGB(255, 0, 150, 0)
+                                                          ),
+                                                          Text(
+                                                              '0'
+                                                          )
+                                                        ]
+                                                    )
+                                                ),
+                                                Container(
+                                                    margin: EdgeInsets.symmetric(
+                                                        horizontal: 10
+                                                    ),
+                                                    child: Column(
+                                                        children: [
+                                                          Icon(
+                                                              Icons.timer,
+                                                              color: Color.fromARGB(255, 0, 0, 255)
+                                                          ),
+                                                          Text(
+                                                              '0'
+                                                          )
+                                                        ]
+                                                    )
+                                                ),
+                                                Container(
+                                                    margin: EdgeInsets.symmetric(
+                                                        horizontal: 10
+                                                    ),
+                                                    child: Column(
+                                                        children: [
+                                                          Icon(
+                                                              Icons.fireplace,
+                                                              color: Color.fromARGB(255, 255, 0, 0)
+                                                          ),
+                                                          Text(
+                                                              '0'
+                                                          )
+                                                        ]
+                                                    )
                                                 )
-                                              ),
-                                              Text(
-                                                '/6000'
-                                              )
-                                            ]
+                                              ]
                                           )
                                         ]
-                                      ),
-                                      Column(
-                                        children: [
-                                          Text(
-                                            '0%'
-                                          )
-                                        ]
+                                    ),
+                                    Image.network(
+                                        'https://cdn4.iconfinder.com/data/icons/medical-115/60/medical-flat-098-heart-beat-128.png',
+                                        width: 65
+                                    )
+                                  ]
+                              )
+                            ]
+                          )
+                        )
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/walk');
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(255, 255, 255, 255)
+                          ),
+                          padding: EdgeInsets.all(
+                              15
+                          ),
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
+                          ),
+                          child: Column(
+                              children: [
+                                Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Icon(
+                                        Icons.remove_circle,
+                                        color: Color.fromARGB(255, 255, 0, 0),
                                       )
                                     ]
-                                  )
-                                ]
-                            )
-                        ),
-                        Container(
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      children: [
+                                        Text(
+                                          'Шаги'
+                                        ),
+                                        Row(
+                                          children: [
+                                            Container(
+                                              child: Text(
+                                                '0',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold
+                                                )
+                                              )
+                                            ),
+                                            Text(
+                                              '/6000'
+                                            )
+                                          ]
+                                        )
+                                      ]
+                                    ),
+                                    Column(
+                                      children: [
+                                        Text(
+                                          '0%'
+                                        )
+                                      ]
+                                    )
+                                  ]
+                                )
+                              ]
+                          )
+                        )
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/exercise');
+                        },
+                        child: Container(
                           padding: EdgeInsets.all(
                             15
                           ),
@@ -286,13 +312,13 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Column(
                             children: [
                               Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Icon(
-                                      Icons.remove_circle,
-                                      color: Color.fromARGB(255, 255, 0, 0),
-                                    )
-                                  ]
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Icon(
+                                    Icons.remove_circle,
+                                    color: Color.fromARGB(255, 255, 0, 0),
+                                  )
+                                ]
                               ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -365,7 +391,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           )
                                       ),
                                       onPressed: () {
-
+  
                                       },
                                       child: Icon(
                                           Icons.directions_run
@@ -392,7 +418,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           )
                                       ),
                                       onPressed: () {
-
+  
                                       },
                                       child: Icon(
                                           Icons.bike_scooter
@@ -419,7 +445,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           )
                                       ),
                                       onPressed: () {
-
+  
                                       },
                                       child: Icon(
                                           Icons.list
@@ -429,13 +455,110 @@ class _MyHomePageState extends State<MyHomePage> {
                               )
                             ]
                           )
-                        ),
-                        Container(
+                        )
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/food');
+                        },
+                        child: Container(
                           margin: EdgeInsets.symmetric(
                             vertical: 15
                           ),
                           padding: EdgeInsets.all(
                             25
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(255, 255, 255, 255)
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Icon(
+                                    Icons.remove_circle,
+                                    color: Color.fromARGB(255, 255, 0, 0),
+                                  )
+                                ]
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Еда',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20
+                                        )
+                                      ),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            margin: EdgeInsets.symmetric(
+                                              horizontal: 10
+                                            ),
+                                            child: Text(
+                                              '0',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 28
+                                              )
+                                            )
+                                          ),
+                                          Text(
+                                            '/1779 ккал'
+                                          )
+                                        ]
+                                      )
+                                    ]
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+
+                                    },
+                                    child: Text(
+                                      'Запись'
+                                    ),
+                                    style: ButtonStyle(
+                                      foregroundColor: MaterialStateProperty.all<Color>(
+                                        Color.fromARGB(255, 0, 0, 0)
+                                      ),
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(100.0),
+                                          side: BorderSide(
+                                            color: Color.fromARGB(255, 150, 150, 150)
+                                          )
+                                        )
+                                      ),
+                                      fixedSize: MaterialStateProperty.all<Size>(
+                                        Size(
+                                          125.0,
+                                          45.0
+                                        )
+                                      )
+                                    )
+                                 )
+                                ]
+                              )
+                            ]
+                          )
+                        )
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/sleep');
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(
+                              25
+                          ),
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
                           ),
                           decoration: BoxDecoration(
                               color: Color.fromARGB(255, 255, 255, 255)
@@ -452,143 +575,61 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ]
                                 ),
                                 Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                                'Еда',
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 20
-                                                )
-                                            ),
-                                            Row(
-                                                children: [
-                                                  Container(
-                                                    margin: EdgeInsets.symmetric(
-                                                      horizontal: 10
-                                                    ),
-                                                    child: Text(
-                                                      '0',
-                                                      style: TextStyle(
-                                                        fontWeight: FontWeight.bold,
-                                                          fontSize: 28
-                                                      )
-                                                    ) 
-                                                  ),
-                                                  Text(
-                                                    '/1779 ккал'
-                                                  )
-                                                ]
-                                            )
-                                          ]
-                                      ),
-                                      TextButton(
-                                          onPressed: () {
-
-                                          },
-                                          child: Text(
-                                              'Запись'
-                                          ),
-                                          style: ButtonStyle(
-                                              foregroundColor: MaterialStateProperty.all<Color>(
-                                                  Color.fromARGB(255, 0, 0, 0)
-                                              ),
-                                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                                  RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(100.0),
-                                                      side: BorderSide(
-                                                          color: Color.fromARGB(255, 150, 150, 150)
-                                                      )
-                                                  )
-                                              ),
-                                              fixedSize: MaterialStateProperty.all<Size>(
-                                                  Size(
-                                                      125.0,
-                                                      45.0
-                                                  )
-                                              )
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Сон',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20
                                           )
+                                        ),
+                                        Text(
+                                            'Как вам спалось'
+                                        )
+                                      ]
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+
+                                      },
+                                      child: Text(
+                                        'Запись'
+                                      ),
+                                      style: ButtonStyle(
+                                        foregroundColor: MaterialStateProperty.all<Color>(
+                                          Color.fromARGB(255, 0, 0, 0)
+                                        ),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                          RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(100.0),
+                                            side: BorderSide(
+                                              color: Color.fromARGB(255, 150, 150, 150)
+                                            )
+                                          )
+                                        ),
+                                        fixedSize: MaterialStateProperty.all<Size>(
+                                          Size(
+                                            125.0,
+                                            45.0
+                                          )
+                                        )
                                       )
-                                    ]
+                                    )
+                                  ]
                                 )
                               ]
                           )
-                        ),
-                        Container(
-                            padding: EdgeInsets.all(
-                                25
-                            ),
-                            margin: EdgeInsets.symmetric(
-                              vertical: 15
-                            ),
-                            decoration: BoxDecoration(
-                                color: Color.fromARGB(255, 255, 255, 255)
-                            ),
-                            child: Column(
-                                children: [
-                                  Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        Icon(
-                                          Icons.remove_circle,
-                                          color: Color.fromARGB(255, 255, 0, 0),
-                                        )
-                                      ]
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Сон',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 20
-                                            )
-                                          ),
-                                          Text(
-                                              'Как вам спалось'
-                                          )
-                                        ]
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-
-                                        },
-                                        child: Text(
-                                          'Запись'
-                                        ),
-                                        style: ButtonStyle(
-                                          foregroundColor: MaterialStateProperty.all<Color>(
-                                            Color.fromARGB(255, 0, 0, 0)
-                                          ),
-                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                            RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(100.0),
-                                              side: BorderSide(
-                                                color: Color.fromARGB(255, 150, 150, 150)
-                                              )
-                                            )
-                                          ),
-                                          fixedSize: MaterialStateProperty.all<Size>(
-                                            Size(
-                                              125.0,
-                                              45.0
-                                            )
-                                          )
-                                        )
-                                      )
-                                    ]
-                                  )
-                                ]
-                            )
-                        ),
-                        Container(
+                        )
+                      ),
+                      GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/body');
+                          },
+                          child: Container(
                             padding: EdgeInsets.all(
                                 15
                             ),
@@ -688,135 +729,136 @@ class _MyHomePageState extends State<MyHomePage> {
                                   )
                                 ]
                             )
+                        )
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/water');
+                        },
+                        child: Container(
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(255, 255, 255, 255)
                         ),
-                        Container(
-                            decoration: BoxDecoration(
-                                color: Color.fromARGB(255, 255, 255, 255)
+                        padding: EdgeInsets.all(
+                          15
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Icon(
+                                  Icons.remove_circle,
+                                  color: Color.fromARGB(255, 255, 0, 0),
+                                )
+                              ]
                             ),
-                            padding: EdgeInsets.all(
-                                15
-                            ),
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.pushNamed(context, '/water');
-                              },
-                              child: Column(
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Icon(
-                                        Icons.remove_circle,
-                                        color: Color.fromARGB(255, 255, 0, 0),
-                                      )
-                                    ]
-                                  ),
-                                  Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  Column(
                                       children: [
-                                        Column(
-                                            children: [
-                                              Text(
-                                                'Вода',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 18
-                                                )
-                                              ),
-                                              Row(
-                                                crossAxisAlignment: CrossAxisAlignment.end,
-                                                children: [
-                                                  Text(
-                                                    '$glassesCount',
-                                                    style: TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 28
-                                                    )
-                                                  ),
-                                                  Container(
-                                                      margin: EdgeInsets.symmetric(
-                                                        horizontal: 5
-                                                      ),
-                                                      child: Text(
-                                                        'стак.'
-                                                      )
-                                                  )
-                                                ]
-                                              )
-                                            ]
+                                        Text(
+                                          'Вода',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18
+                                          )
                                         ),
                                         Row(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
                                           children: [
-                                            Container(
-                                              child: TextButton(
-
-                                                onPressed: () {
-                                                  removeGlass();
-                                                },
-                                                child: Icon(
-                                                  Icons.remove
-                                                ),
-                                                style: ButtonStyle(
-                                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                                    RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(100.0),
-                                                      side: BorderSide(
-                                                        color: removeGlassesBtnColor
-                                                      )
-                                                    )
-                                                  ),
-                                                  fixedSize: MaterialStateProperty.all<Size>(
-                                                    Size(
-                                                      45.0,
-                                                      45.0
-                                                    )
-                                                  ),
-                                                  foregroundColor: MaterialStateProperty.all<Color>(
-                                                    removeGlassesBtnColor
-                                                  )
-                                                )
-                                              ),
-                                              margin: EdgeInsets.all(
-                                                15
+                                            Text(
+                                              '$glassesCount',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 28
                                               )
                                             ),
-                                            TextButton(
-                                              onPressed: () {
-                                                addGlass();
-                                              },
-                                              child: Icon(
-                                                  Icons.add
-                                              ),
-                                              style: ButtonStyle(
-                                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                                  RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(100.0),
-                                                    side: BorderSide(
-                                                      color: Color.fromARGB(255, 150, 150, 150)
-                                                    )
-                                                  )
+                                            Container(
+                                                margin: EdgeInsets.symmetric(
+                                                  horizontal: 5
                                                 ),
-                                                fixedSize: MaterialStateProperty.all<Size>(
-                                                  Size(
-                                                    45.0,
-                                                    45.0
-                                                  )
-                                                ),
-                                                foregroundColor: MaterialStateProperty.all<Color>(
-                                                  Color.fromARGB(255, 150, 150, 150)
+                                                child: Text(
+                                                  'стак.'
                                                 )
-                                              )
                                             )
                                           ]
                                         )
                                       ]
+                                  ),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        child: TextButton(
+
+                                          onPressed: () {
+                                            removeGlass();
+                                          },
+                                          child: Icon(
+                                            Icons.remove
+                                          ),
+                                          style: ButtonStyle(
+                                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(100.0),
+                                                side: BorderSide(
+                                                  color: removeGlassesBtnColor
+                                                )
+                                              )
+                                            ),
+                                            fixedSize: MaterialStateProperty.all<Size>(
+                                              Size(
+                                                45.0,
+                                                45.0
+                                              )
+                                            ),
+                                            foregroundColor: MaterialStateProperty.all<Color>(
+                                              removeGlassesBtnColor
+                                            )
+                                          )
+                                        ),
+                                        margin: EdgeInsets.all(
+                                          15
+                                        )
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          addGlass();
+                                        },
+                                        child: Icon(
+                                            Icons.add
+                                        ),
+                                        style: ButtonStyle(
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(100.0),
+                                              side: BorderSide(
+                                                color: Color.fromARGB(255, 150, 150, 150)
+                                              )
+                                            )
+                                          ),
+                                          fixedSize: MaterialStateProperty.all<Size>(
+                                            Size(
+                                              45.0,
+                                              45.0
+                                            )
+                                          ),
+                                          foregroundColor: MaterialStateProperty.all<Color>(
+                                            Color.fromARGB(255, 150, 150, 150)
+                                          )
+                                        )
+                                      )
+                                    ]
                                   )
                                 ]
-                              )
                             )
+                          ]
                         )
-                      ]
-                  )
+                      )
+                    )
+                  ]
+                )
               )
             ),
             Container(
@@ -3385,12 +3427,164 @@ class WaterActivity extends StatefulWidget {
 
 class _WaterActivityState extends State<WaterActivity> {
 
+  int glassesCount = 0;
+  late Color removeGlassesBtnColor;
+  Color disabledGlassesBtnColor = Color.fromARGB(127, 150, 150, 150);
+  Color enabledGlassesBtnColor = Color.fromARGB(255, 150, 150, 150);
+  int mlsPerGlass = 250;
+  var contextMenuBtns = {'Установить норму', 'Аксессуары'};
+
+  void removeGlass() {
+    bool isGlassesCountEmpty = glassesCount <= 0;
+    bool isGlassesCountNotEmpty = !isGlassesCountEmpty;
+    if (isGlassesCountNotEmpty) {
+      setState(() {
+        glassesCount--;
+        isGlassesCountEmpty = glassesCount <= 0;
+        if (isGlassesCountEmpty) {
+          // делаем кнопку disabled
+          removeGlassesBtnColor = Color.fromARGB(127, 150, 150, 150);
+        }
+      });
+    }
+  }
+
+  void addGlass() {
+    setState(() {
+      removeGlassesBtnColor = enabledGlassesBtnColor;
+      glassesCount++;
+    });
+  }
+
+  String computeGlassesMls() {
+    int glassesCountMls = glassesCount * mlsPerGlass;
+    String updatedGlassesCountMls = '$glassesCountMls';
+    return updatedGlassesCountMls;
+  }
+
+  @override
+  initState() {
+    super.initState();
+    removeGlassesBtnColor = enabledGlassesBtnColor;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-
-      ]
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Вода'
+        ),
+        actions: <Widget>[
+          GestureDetector(
+            child: PopupMenuButton<String>(
+              icon: Icon(
+                  Icons.bar_chart
+              ),
+              itemBuilder: (BuildContext context) {
+                return [];
+              }
+            ),
+            onTap: () {
+              Navigator.pushNamed(context, '/main');
+            }
+          ),
+          PopupMenuButton<String>(
+            itemBuilder: (BuildContext context) {
+              return contextMenuBtns.map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Text(choice)
+                );
+              }).toList();
+            },
+          )
+        ]
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(
+              25
+            ),
+            margin: EdgeInsets.symmetric(
+              vertical: 25
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Сегодня',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20
+                  )
+                ),
+                Container(
+                  child: Image.asset(
+                    'assets/images/glass_calculator.png',
+                    width: 100,
+                    height: 100
+                  ),
+                  margin: EdgeInsets.symmetric(
+                    vertical: 25
+                  )
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      style: ButtonStyle(
+                        foregroundColor: MaterialStateProperty.all<Color>(
+                          Color.fromARGB(255, 0, 0, 0)
+                        )
+                      ),
+                      onPressed: () {
+                        removeGlass();
+                      },
+                      child: Text(
+                        '-'
+                      )
+                    ),
+                    Text(
+                      '$glassesCount',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 48
+                      )
+                    ),
+                    TextButton(
+                      style: ButtonStyle(
+                        foregroundColor: MaterialStateProperty.all<Color>(
+                          Color.fromARGB(255, 0, 0, 0)
+                        )
+                      ),
+                      onPressed: () {
+                        addGlass();
+                      },
+                      child: Text(
+                        '+'
+                      )
+                    )
+                  ]
+                ),
+                Text(
+                  'стак.'
+                ),
+                Text(
+                  '(${computeGlassesMls()} мл)'
+                ),
+                Text(
+                  'Отслеживайте объем потребляемой воды'
+                )
+              ]
+            )
+          )
+        ]
+      )
     );
   }
 
@@ -3407,12 +3601,220 @@ class BodyActivity extends StatefulWidget {
 
 class _BodyActivityState extends State<BodyActivity> {
 
+  List<Column> bodyRecords = [];
+  var contextMenuBtns = {
+    'Установить норму',
+    'Приостановить подсчет шагов',
+    'О разделе \"Шаги\"'
+  };
+
+  void addBodyRecord() {
+    int bodyRecordsIndex = bodyRecords.length;
+    Column bodyRecord = Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '74,2 кг'
+            ),
+            Text(
+              '36,0 %'
+            ),
+            Text(
+              '47,5 кг'
+            )
+          ]
+        ),
+        Text(
+          '10:00'
+        ),
+        Divider(
+          thickness: 1,
+        )
+      ]
+    );
+    bodyRecords.add(bodyRecord);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [
 
+    addBodyRecord();
+    addBodyRecord();
+    addBodyRecord();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Состав тела'
+        ),
+        actions: <Widget>[
+          GestureDetector(
+            child: PopupMenuButton<String>(
+              icon: Icon(
+                Icons.bar_chart
+              ),
+              itemBuilder: (BuildContext context) {
+                return [];
+              }
+            ),
+            onTap: () {
+              Navigator.pushNamed(context, '/main');
+            }
+          ),
+          PopupMenuButton<String>(
+            itemBuilder: (BuildContext context) {
+              return contextMenuBtns.map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Text(choice)
+                );
+              }).toList();
+            },
+          )
         ]
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.symmetric(
+                    vertical: 15
+                ),
+                padding: EdgeInsets.all(
+                    15
+                ),
+                decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '11 февр., 09:08'
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                            children: [
+                              Text(
+                                  'Вес',
+                                  style: TextStyle(
+                                      color: Color.fromARGB(255, 0, 175, 0)
+                                  )
+                              ),
+                              Text(
+                                  '74,2 кг',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 28
+                                  )
+                              )
+                            ]
+                        ),
+                        Column(
+                            children: [
+                              Text(
+                                  'Телесный жир'
+                              ),
+                              Text(
+                                  '36,0 %',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 28
+                                  )
+                              )
+                            ]
+                        ),
+                        Column(
+                            children: [
+                              Text(
+                                  'Скелетн.\nмускулат.'
+                              ),
+                              Text(
+                                  '47,5 кг',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 28
+                                  )
+                              )
+                            ]
+                        )
+                      ]
+                    ),
+                    Divider(
+                      thickness: 1
+                    ),
+                    Text(
+                      'Чтобы рассчитать ИМТ укажите в профиле свой рост.',
+                      textAlign: TextAlign.center
+                    ),
+                    Text(
+                      'Редактировать профиль',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold
+                      )
+                    ),
+                    Divider(
+                      thickness: 1
+                    )
+                  ]
+                )
+              ),
+              Container(
+                  margin: EdgeInsets.symmetric(
+                    vertical: 15
+                  ),
+                  padding: EdgeInsets.all(
+                    15
+                  ),
+                  width: 1000,
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 255, 255, 255)
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: bodyRecords
+                  )
+              ),
+              TextButton(
+                child: Text(
+                    'Запись'
+                ),
+                onPressed: () {
+
+                },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 175, 175, 175)
+                  ),
+                  foregroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 0, 0, 0)
+                  ),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100.0),
+                      side: BorderSide(
+                        color: Color.fromARGB(255, 150, 150, 150)
+                      )
+                    )
+                  ),
+                  fixedSize: MaterialStateProperty.all<Size>(
+                    Size(
+                      125.0,
+                      45.0
+                    )
+                  )
+                )
+              )
+            ]
+          )
+        )
+      )
     );
   }
 
@@ -3431,10 +3833,21 @@ class _SleepActivityState extends State<SleepActivity> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Сон'
+        )
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
 
-        ]
+            ]
+          )
+        )
+      )
     );
   }
 
@@ -3451,12 +3864,151 @@ class FoodActivity extends StatefulWidget {
 
 class _FoodActivityState extends State<FoodActivity> {
 
+  var contextMenuBtns = {
+    'Устновить норму',
+    'Мое питание',
+    'О \"Питании и диете\"',
+  };
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [
-
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Еда'
+        ),
+        actions: <Widget>[
+          GestureDetector(
+            child: PopupMenuButton<String>(
+              icon: Icon(
+                Icons.bar_chart
+              ),
+              itemBuilder: (BuildContext context) {
+                return [];
+              }
+            ),
+            onTap: () {
+              Navigator.pushNamed(context, '/main');
+            }
+          ),
+          PopupMenuButton<String>(
+            itemBuilder: (BuildContext context) {
+              return contextMenuBtns.map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Text(choice)
+                );
+              }).toList();
+            },
+          )
         ]
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(
+                    15
+                ),
+                margin: EdgeInsets.symmetric(
+                    vertical: 15
+                ),
+                decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: null
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Сегодня',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold
+                      )
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '0',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 28
+                          )
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(
+                            left: 5
+                          ),
+                          child: Text(
+                            'Ккал',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20
+                            )
+                          )
+                        )
+                      ]
+                    ),
+                    // assets/images/food_logo
+                    Image.asset(
+                      'assets/images/food_logo.png',
+                      width: 100,
+                      height: 100,
+                    ),
+                    Text(
+                      'Отслеживание питания поможет придерживаться\nздоровой сбалансированной диеты',
+                      textAlign: TextAlign.center
+                    ),
+                  ]
+                )
+              ),
+              TextButton(
+                child: Text(
+                  'Запись'
+                ),
+                onPressed: () {
+
+                },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 175, 175, 175)
+                  ),
+                  foregroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 0, 0, 0)
+                  ),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100.0),
+                      side: BorderSide(
+                        color: Color.fromARGB(255, 150, 150, 150)
+                      )
+                    )
+                  ),
+                  fixedSize: MaterialStateProperty.all<Size>(
+                    Size(
+                      125.0,
+                      45.0
+                    )
+                  )
+                )
+              )
+            ]
+          )
+        )
+      )
     );
   }
 
@@ -3473,12 +4025,224 @@ class ExerciseActivity extends StatefulWidget {
 
 class _ExerciseActivityState extends State<ExerciseActivity> {
 
+  var contextMenuBtns = {
+    'Скрыть автозаписи',
+    'Удалить'
+  };
+
+  List<Column> exercisesRecords = [];
+
+  void addExerciseRecord() {
+    Column exerciseRecord =       Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Вс. 13 февр.',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold
+                )
+              ),
+              Text(
+                '00:00:00'
+              )
+            ]
+          ),
+          Divider(
+            thickness: 1,
+            color: Color.fromARGB(255, 150, 150, 150),
+          ),
+          Row(
+            children: [
+              Icon(
+                Icons.directions_run
+              ),
+              Text(
+                'Бег'
+              )
+            ]
+          ),
+          Text(
+            '00:00:00'
+          ),
+          Text(
+            '22:47'
+          )
+        ]
+    );
+    exercisesRecords.add(exerciseRecord);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [
 
+    addExerciseRecord();
+    addExerciseRecord();
+    addExerciseRecord();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Все упражнения'
+        ),
+        actions: <Widget>[
+          GestureDetector(
+            child: PopupMenuButton<String>(
+              icon: Icon(
+                  Icons.arrow_drop_down
+              ),
+              itemBuilder: (BuildContext context) {
+                return [];
+              }
+            ),
+            onTap: () {
+              Navigator.pushNamed(context, '/main');
+            }
+          ),
+          GestureDetector(
+            child: PopupMenuButton<String>(
+                icon: Icon(
+                    Icons.calendar_today
+                ),
+                itemBuilder: (BuildContext context) {
+                  return [];
+                }
+            ),
+            onTap: () {
+              Navigator.pushNamed(context, '/main');
+            }
+          ),
+          GestureDetector(
+            child: PopupMenuButton<String>(
+                icon: Icon(
+                    Icons.arrow_forward_rounded
+                ),
+                itemBuilder: (BuildContext context) {
+                  return [];
+                }
+            ),
+            onTap: () {
+              Navigator.pushNamed(context, '/main');
+            }
+          ),
+          PopupMenuButton<String>(
+            itemBuilder: (BuildContext context) {
+              return contextMenuBtns.map((String choice) {
+                return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice)
+                );
+              }).toList();
+            },
+          )
         ]
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '7-13 февр.'
+                    ),
+                    Text(
+                      '00:00:00',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 36
+                      )
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '3563',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24
+                              )
+                            ),
+                            Container(
+                                margin: EdgeInsets.only(
+                                  left: 5
+                                ),
+                                child: Text(
+                                  'ккал',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18
+                                  )
+                                )
+                            )
+                          ]
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(
+                            left: 5
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 35
+                                ),
+                                child: Text(
+                                  '9',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 24
+                                  )
+                                )
+                              ),
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 5
+                                ),
+                                child: Text(
+                                  'сеансы',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18
+                                  )
+                                )
+                              )
+                            ]
+                          )
+                        )
+                      ]
+                    ),
+                    Container(
+                      margin: EdgeInsets.symmetric(
+                        vertical: 25
+                      ),
+                      child: Column(
+                        children: exercisesRecords
+                      )
+                    )
+                  ]
+                )
+              )
+            ]
+          )
+        )
+      )
     );
   }
 
@@ -3498,10 +4262,24 @@ class _WalkActivityState extends State<WalkActivity> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Шаги'
+        ),
+        actions: [
 
         ]
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+              children: [
+
+              ]
+          )
+        )
+      )
     );
   }
 
@@ -3520,10 +4298,21 @@ class _ActiveActivityState extends State<ActiveActivity> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Активность'
+        )
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
 
-        ]
+            ]
+          )
+        )
+      )
     );
   }
 
