@@ -3,6 +3,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'package:sqlite_viewer/sqlite_viewer.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
+
+import 'db.dart';
+import 'models.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -48,11 +55,19 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  late DatabaseHandler handler;
   int currentTab = 0;
   int glassesCount = 0;
   late Color removeGlassesBtnColor;
   Color disabledGlassesBtnColor = Color.fromARGB(127, 150, 150, 150);
   Color enabledGlassesBtnColor = Color.fromARGB(255, 150, 150, 150);
+  var contextMenuBtns = {
+    'Управление элементами',
+    'Для вас',
+    'События',
+    'Уведомления',
+    'Настр.',
+  };
 
   void addGlass() {
     setState(() {
@@ -76,10 +91,63 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void setContextMenu(tabIndex) {
+    bool isMainPageActivity = tabIndex == 0;
+    bool isTogetherPageActivity = tabIndex == 1;
+    bool isFitnesPageActivity = tabIndex == 2;
+    bool isMyPageActivity = tabIndex == 3;
+    if (isMainPageActivity) {
+      setState(() {
+        contextMenuBtns = {
+          'Управление элементами',
+          'Для вас',
+          'События',
+          'Уведомления',
+          'Настр.',
+        };
+      });
+    } else if (isTogetherPageActivity) {
+      setState(() {
+        contextMenuBtns = {
+          'Для вас',
+          'События',
+          'Уведомления',
+          'Настр.',
+        };
+      });
+    } else if (isFitnesPageActivity) {
+      setState(() {
+        contextMenuBtns = {
+          'Направления фитнеса',
+          'Журнал программы',
+          'Для вас',
+          'События',
+          'Уведомления',
+          'Настр.',
+        };
+      });
+    } else if (isMyPageActivity) {
+      setState(() {
+        contextMenuBtns = {
+          'Для вас',
+          'События',
+          'Уведомления',
+          'Настр.',
+        };
+      });
+    }
+  }
+
   @override
   initState() {
     super.initState();
     removeGlassesBtnColor = enabledGlassesBtnColor;
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
   }
 
   @override
@@ -90,12 +158,25 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
+          actions: [
+            PopupMenuButton<String>(
+              itemBuilder: (BuildContext context) {
+                return contextMenuBtns.map((String choice) {
+                  return PopupMenuItem<String>(
+                      value: choice,
+                      child: Text(choice)
+                  );
+                }).toList();
+              },
+            )
+          ],
           bottom: TabBar(
             onTap: (index) {
               print('currentTabIndex: ${index}');
               setState(() {
                 currentTab = index;
               });
+              setContextMenu(currentTab);
             },
             tabs: <Widget>[
               Tab(
@@ -3407,7 +3488,16 @@ class _MyHomePageState extends State<MyHomePage> {
               )
             ),
             Column(
-
+              children: <Widget>[
+                TextButton(
+                    child: Text(
+                        'Database inspector'
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => DatabaseList()));
+                    }
+                )
+              ],
             )
           ]
         )
@@ -3839,11 +3929,89 @@ class _SleepActivityState extends State<SleepActivity> {
           'Сон'
         )
       ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
       body: SingleChildScrollView(
         child: Container(
           child: Column(
             children: [
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Сегодня'
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Часов: '
+                        ),
+                        Text(
+                          '0',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold
+                          )
+                        ),
+                        Text(
+                          ', '
+                        ),
+                        Text(
+                          'минут: '
+                        ),
+                        Text(
+                          '0',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold
+                          )
+                        ),
+                        Text(
+                          '.'
+                        )
+                      ]
+                    ),
+                    Container(
+                      margin: EdgeInsets.symmetric(
+                        vertical: 15
+                      ),
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        color: Color.fromARGB(255, 225, 225, 225)
+                      )
+                    )
+                  ]
+                )
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    child: Text(
+                      'Добавить запись'
+                    ),
+                    onPressed: () {
 
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 175, 175, 175)
+                      ),
+                      foregroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 0, 0, 0)
+                      ),
+                    )
+                  )
+                ]
+              )
             ]
           )
         )
@@ -4271,12 +4439,109 @@ class _WalkActivityState extends State<WalkActivity> {
 
         ]
       ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
       body: SingleChildScrollView(
         child: Container(
+          margin: EdgeInsets.symmetric(
+            vertical: 15
+          ),
+          padding: EdgeInsets.all(
+            15
+          ),
+          decoration: BoxDecoration(
+            color: Color.fromARGB(255, 255, 255, 255)
+          ),
           child: Column(
-              children: [
+            children: [
+              Container(
+                child: Column(
+                  children: [
+                    Text(
+                      'Сегодня'
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '0',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24
+                          )
+                        ),
+                        Text(
+                          ' шагов',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20
+                          )
+                        )
+                      ]
+                    ),
+                    Container(
+                      margin: EdgeInsets.symmetric(
+                        vertical: 15
+                      ),
+                      child: LinearProgressIndicator(
 
-              ]
+                      )
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            horizontal: 15
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                '0',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20
+                                )
+                              ),
+                              Text(
+                                ' км',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold
+                                )
+                              )
+                            ]
+                          )
+                        ),
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            horizontal: 15
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                '0',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20
+                                )
+                              ),
+                              Text(
+                                ' км',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold
+                                )
+                              )
+                            ]
+                          )
+                        )
+                      ]
+                    ),
+                    Text(
+                      'Данные о шагах не введены'
+                    )
+                  ]
+                )
+              )
+            ]
           )
         )
       )
@@ -4304,11 +4569,162 @@ class _ActiveActivityState extends State<ActiveActivity> {
           'Активность'
         )
       ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
       body: SingleChildScrollView(
         child: Container(
+          margin: EdgeInsets.symmetric(
+            vertical: 15
+          ),
+          padding: EdgeInsets.all(
+            15
+          ),
           child: Column(
             children: [
-
+              Container(
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Сегодня'
+                    ),
+                    Image.asset(
+                      'assets/images/food_logo.png',
+                      width: 150,
+                      height: 150
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Шаги'
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Icon(
+                                    Icons.directions_walk,
+                                    size: 24
+                                ),
+                                Container(
+                                    child: Text(
+                                      '0',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20
+                                      )
+                                    ),
+                                    margin: EdgeInsets.only(
+                                        left: 15
+                                    )
+                                )
+                              ]
+                            ),
+                            Text(
+                              '/6000'
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            Text(
+                                'Время активности'
+                            ),
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Icon(
+                                    Icons.timer,
+                                    size: 24
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      '0',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20
+                                      )
+                                    ),
+                                    margin: EdgeInsets.only(
+                                      left: 15
+                                    )
+                                  )
+                                ]
+                            ),
+                            Text(
+                                '/90 мин'
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            Text(
+                                'Скелетн.\nмускулат.'
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Icon(
+                                    Icons.directions_walk,
+                                    size: 24
+                                ),
+                                Container(
+                                  child: Text(
+                                      '0'
+                                  ),
+                                  margin: EdgeInsets.only(
+                                      left: 15
+                                  )
+                                )
+                              ]
+                            ),
+                            Text(
+                              '/500 ккал'
+                            )
+                          ]
+                        )
+                      ]
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Всего сожжено каллорий'
+                        ),
+                        Text(
+                          '********************'
+                        ),
+                        Text(
+                          '666 ккал',
+                          style: TextStyle(
+                            fontSize: 18
+                          )
+                        )
+                      ]
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Расстояние, пройденное в ходе активностей'
+                        ),
+                        Text(
+                          '*****'
+                        ),
+                        Text(
+                          '0,0 км',
+                          style: TextStyle(
+                              fontSize: 18
+                          )
+                        )
+                      ]
+                    ),
+                  ]
+                )
+              )
             ]
           )
         )

@@ -29,6 +29,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  sqflite:
+  path:
+  sqlite_viewer: ^1.0.5
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -61,6 +64,7 @@ flutter:
   assets:
      - assets/images/glass_calculator.png
      - assets/images/food_logo.png
+     - assets/images/activity_logo.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
