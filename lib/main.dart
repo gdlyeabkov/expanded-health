@@ -3691,14 +3691,32 @@ class BodyActivity extends StatefulWidget {
 
 class _BodyActivityState extends State<BodyActivity> {
 
+  late DatabaseHandler handler;
   List<Column> bodyRecords = [];
   var contextMenuBtns = {
     'Установить норму',
     'Приостановить подсчет шагов',
     'О разделе \"Шаги\"'
   };
+  String lastBodyRecordWeight = '';
+  String lastBodyRecordFat = '';
+  String lastBodyRecordMusculature = '';
 
-  void addBodyRecord() {
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  void addBodyRecord(BodyRecord record) {
+    double bodyRecordWeight = record.weight;
+    int bodyRecordFat = record.fat;
+    int bodyRecordMusculature = record.musculature;
     int bodyRecordsIndex = bodyRecords.length;
     Column bodyRecord = Column(
       children: [
@@ -3706,13 +3724,13 @@ class _BodyActivityState extends State<BodyActivity> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '74,2 кг'
+              '${bodyRecordWeight} кг'
             ),
             Text(
-              '36,0 %'
+              '${bodyRecordFat} %'
             ),
             Text(
-              '47,5 кг'
+              '${bodyRecordMusculature} кг'
             )
           ]
         ),
@@ -3725,14 +3743,19 @@ class _BodyActivityState extends State<BodyActivity> {
       ]
     );
     bodyRecords.add(bodyRecord);
+    // setState(() {
+      lastBodyRecordWeight = '0';
+      lastBodyRecordFat = '0';
+      lastBodyRecordMusculature = '0';
+    // });
   }
 
   @override
   Widget build(BuildContext context) {
 
-    addBodyRecord();
-    addBodyRecord();
-    addBodyRecord();
+    // addBodyRecord();
+    // addBodyRecord();
+    // addBodyRecord();
 
     return Scaffold(
       appBar: AppBar(
@@ -3797,7 +3820,7 @@ class _BodyActivityState extends State<BodyActivity> {
                                   )
                               ),
                               Text(
-                                  '74,2 кг',
+                                  '${lastBodyRecordWeight} кг',
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 28
@@ -3811,7 +3834,7 @@ class _BodyActivityState extends State<BodyActivity> {
                                   'Телесный жир'
                               ),
                               Text(
-                                  '36,0 %',
+                                  '${lastBodyRecordFat} %',
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 28
@@ -3825,7 +3848,7 @@ class _BodyActivityState extends State<BodyActivity> {
                                   'Скелетн.\nмускулат.'
                               ),
                               Text(
-                                  '47,5 кг',
+                                  '${lastBodyRecordMusculature} кг',
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 28
@@ -3856,50 +3879,75 @@ class _BodyActivityState extends State<BodyActivity> {
                 )
               ),
               Container(
-                  margin: EdgeInsets.symmetric(
-                    vertical: 15
-                  ),
-                  padding: EdgeInsets.all(
-                    15
-                  ),
-                  width: 1000,
-                  decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 255, 255, 255)
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    children: bodyRecords
-                  )
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                padding: EdgeInsets.all(
+                  15
+                ),
+                width: 1000,
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: FutureBuilder(
+                    future: this.handler.retrieveBodyRecords(),
+                    builder: (BuildContext context, AsyncSnapshot<List<BodyRecord>> snapshot) {
+                      int snapshotsCount = 0;
+                      if (snapshot.data != null) {
+                        snapshotsCount = snapshot.data!.length;
+                        bodyRecords = [];
+                        for (int snapshotIndex = 0; snapshotIndex <
+                            snapshotsCount; snapshotIndex++) {
+                          addBodyRecord(snapshot.data!.elementAt(snapshotIndex));
+                        }
+                      }
+                      if (snapshot.hasData) {
+                        return Column(
+                            children: [
+                              Container(
+                                  height: 250,
+                                  child: SingleChildScrollView(
+                                      child: Column(
+                                          children: bodyRecords
+                                      )
+                                  )
+                              )
+                            ]
+                        );
+                      } else {
+                        return Column(
+
+                        );
+                      }
+                      return Column(
+
+                      );
+                    }
+                )
               ),
               TextButton(
-                child: Text(
-                    'Запись'
-                ),
-                onPressed: () {
-
-                },
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(
-                    Color.fromARGB(255, 175, 175, 175)
-                  ),
-                  foregroundColor: MaterialStateProperty.all<Color>(
+                  foregroundColor: MaterialStateProperty.all(
                     Color.fromARGB(255, 0, 0, 0)
+                  ),
+                  backgroundColor: MaterialStateProperty.all(
+                    Color.fromARGB(255, 200, 200, 200)
                   ),
                   shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100.0),
+                      borderRadius: BorderRadius.circular(18.0),
                       side: BorderSide(
-                        color: Color.fromARGB(255, 150, 150, 150)
+                        color: Colors.transparent
                       )
                     )
-                  ),
-                  fixedSize: MaterialStateProperty.all<Size>(
-                    Size(
-                      125.0,
-                      45.0
-                    )
                   )
-                )
+                ),
+                child: Text(
+                  'Запись'
+                ),
+                onPressed: () {
+                  handler.addNewBodyRecord('', 0, 0, 0.0, '');
+                }
               )
             ]
           )

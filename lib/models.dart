@@ -75,3 +75,41 @@ class Indicators {
         level = res["level"];
 
 }
+
+class BodyRecord {
+  final int? id;
+  final String marks;
+  final int musculature;
+  final int fat;
+  final double weight;
+  final String date;
+
+  BodyRecord({
+    this.id,
+    required this.marks,
+    required this.musculature,
+    required this.fat,
+    required this.weight,
+    required this.date,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'marks': marks,
+      'musculature': musculature,
+      'fat': fat,
+      'weight': weight,
+      'date': date,
+    };
+  }
+
+  BodyRecord.fromMap(Map<String, dynamic> res)
+      : id = res["id"],
+        marks = res["marks"],
+        musculature = res["musculature"],
+        fat = res["fat"],
+        weight = res["weight"],
+        date = res["date"];
+
+}
