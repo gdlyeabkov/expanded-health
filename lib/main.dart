@@ -344,7 +344,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                     Column(
                                       children: [
                                         Text(
-                                          'Шаги'
+                                          'Шаги',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20
+                                          )
                                         ),
                                         Row(
                                           children: [
@@ -599,7 +603,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                   TextButton(
                                     onPressed: () {
-
+                                      handler.addNewFoodRecord('Завтрак');
                                     },
                                     child: Text(
                                       'Запись'
@@ -675,7 +679,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ),
                                     TextButton(
                                       onPressed: () {
-
+                                        handler.addNewSleepRecord('00', '00', '22.11.2000');
                                       },
                                       child: Text(
                                         'Запись'

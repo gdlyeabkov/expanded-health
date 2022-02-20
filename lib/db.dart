@@ -135,4 +135,54 @@ class DatabaseHandler {
     return returnedBodyRecords;
   }
 
+  Future<int> insertSleepRecords(List<SleepRecord> sleepRecords) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    for(var sleepRecord in sleepRecords){
+      result = await db.insert('sleep_records', sleepRecord.toMap());
+    }
+    return result;
+  }
+
+  Future<int> addNewSleepRecord(String hours, String minutes, String date) async {
+    SleepRecord firstSleepRecord = SleepRecord(
+        hours: hours,
+        minutes: minutes,
+        date: date
+    );
+    List<SleepRecord> listOfSleepRecords = [firstSleepRecord];
+    return await insertSleepRecords(listOfSleepRecords);
+  }
+
+  Future<List<SleepRecord>> retrieveSleepRecords() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('sleep_records');
+    var returnedSleepRecords = queryResult.map((e) => SleepRecord.fromMap(e)).toList();
+    return returnedSleepRecords;
+  }
+
+  Future<int> insertFoodRecords(List<FoodRecord> foodRecords) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    for(var foodRecord in foodRecords){
+      result = await db.insert('food_records', foodRecord.toMap());
+    }
+    return result;
+  }
+
+  Future<int> addNewFoodRecord(String type) async {
+    FoodRecord firstFoodRecord = FoodRecord(
+        type: type
+    );
+    List<FoodRecord> listOfFoodRecords = [firstFoodRecord];
+    return await insertFoodRecords(listOfFoodRecords);
+  }
+
+  Future<List<FoodRecord>> retrieveFoodRecords() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('food_records');
+    var returnedFoodRecords = queryResult.map((e) => FoodRecord.fromMap(e)).toList();
+    return returnedFoodRecords;
+  }
+
 }

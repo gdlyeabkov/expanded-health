@@ -113,3 +113,55 @@ class BodyRecord {
         date = res["date"];
 
 }
+
+class SleepRecord {
+  final int? id;
+  final String hours;
+  final String minutes;
+  final String date;
+
+  SleepRecord({
+    this.id,
+    required this.hours,
+    required this.minutes,
+    required this.date
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'hours': hours,
+      'minutes': minutes,
+      'date': date
+    };
+  }
+
+  SleepRecord.fromMap(Map<String, dynamic> res)
+      : id = res["id"],
+        hours = res["hours"],
+        minutes = res["minutes"],
+        date = res["date"];
+
+}
+
+class FoodRecord {
+  final int? id;
+  final String type;
+
+  FoodRecord({
+    this.id,
+    required this.type
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'type': type
+    };
+  }
+
+  FoodRecord.fromMap(Map<String, dynamic> res)
+      : id = res["id"],
+        type = res["type"];
+
+}
