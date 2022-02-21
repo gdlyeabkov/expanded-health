@@ -211,4 +211,45 @@ class DatabaseHandler {
     return returnedExerciseRecords;
   }
 
+  Future<int> insertFoodItems(List<FoodItem> foodItems) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    for(var foodItem in foodItems){
+      result = await db.insert('food_items', foodItem.toMap());
+    }
+    return result;
+  }
+
+  Future<int> addNewFoodItem(String name, int callories, int total_carbs, int total_fats, int protein, int saturated_fats, int trans_fats, int cholesterol, int sodium, int potassium, int cellulose, int sugar, int a, int c, int calcium, int iron, double portions, String type) async {
+    FoodItem firstFoodItem = FoodItem(
+        name: name,
+        callories: callories,
+        total_carbs: total_carbs,
+        total_fats: total_fats,
+        protein: protein,
+        saturated_fats: saturated_fats,
+        trans_fats: trans_fats,
+        cholesterol: cholesterol,
+        sodium: sodium,
+        potassium: potassium,
+        cellulose: cellulose,
+        sugar: sugar,
+        a: a,
+        c: c,
+        calcium: calcium,
+        iron: iron,
+        portions: portions,
+        type: type
+    );
+    List<FoodItem> listOfFoodItems = [firstFoodItem];
+    return await insertFoodItems(listOfFoodItems);
+  }
+
+  Future<List<FoodItem>> retrieveFoodItems() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('food_items');
+    var returnedFoodItems = queryResult.map((e) => FoodItem.fromMap(e)).toList();
+    return returnedFoodItems;
+  }
+
 }

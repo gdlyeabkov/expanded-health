@@ -196,3 +196,104 @@ class ExerciseRecord {
         duration = res["duration"];
 
 }
+
+class FoodItem {
+
+  final int? id;
+  final String name;
+  final int callories;
+  final int total_carbs;
+  final int total_fats;
+  final int protein;
+  final int saturated_fats;
+  final int trans_fats;
+  final int cholesterol;
+  final int sodium;
+  final int potassium;
+  final int cellulose;
+  final int sugar;
+  final int a;
+  final int c;
+  final int calcium;
+  final int iron;
+  final double portions;
+  final String type;
+
+  FoodItem({
+    this.id,
+    required this.name,
+    required this.callories,
+    required this.total_carbs,
+    required this.total_fats,
+    required this.protein,
+    required this.saturated_fats,
+    required this.trans_fats,
+    required this.cholesterol,
+    required this.sodium,
+    required this.potassium,
+    required this.cellulose,
+    required this.sugar,
+    required this.a,
+    required this.c,
+    required this.calcium,
+    required this.iron,
+    required this.portions,
+    required this.type,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'callories': callories,
+      'total_carbs': total_carbs,
+      'total_fats': total_fats,
+      'protein': protein,
+      'saturated_fats': saturated_fats,
+      'trans_fats': trans_fats,
+      'cholesterol': cholesterol,
+      'sodium': sodium,
+      'potassium': potassium,
+      'cellulose': cellulose,
+      'sugar': sugar,
+      'a': a,
+      'c': c,
+      'calcium': calcium,
+      'iron': iron,
+      'portions': portions,
+      'type': type,
+    };
+  }
+
+  FoodItem.fromMap(Map<String, dynamic> res)
+      : id = res["id"],
+        name = res["name"],
+        callories = res["callories"],
+        total_carbs = res["total_carbs"],
+        total_fats = res["total_fats"],
+        protein = res["protein"],
+        saturated_fats = res["saturated_fats"],
+        trans_fats = res["trans_fats"],
+        cholesterol = res["cholesterol"],
+        sodium = res["sodium"],
+        potassium = res["potassium"],
+        cellulose = res["cellulose"],
+        sugar = res["sugar"],
+        a = res["a"],
+        c = res["c"],
+        calcium = res["calcium"],
+        iron = res["iron"],
+        portions = res["portions"],
+        type = res["type"];
+
+}
+
+enum FoodType {
+  none,
+  breakfast,
+  lanch,
+  dinner,
+  morningMeal,
+  dayMeal,
+  eveningMeal
+}

@@ -34,7 +34,11 @@ class MyApp extends StatelessWidget {
         '/active': (context) => const ActiveActivity(),
         '/walk': (context) => const WalkActivity(),
         '/exercise': (context) => const ExerciseActivity(),
+        '/food/record': (context) => const RecordFoodActivity(),
+        '/food/add': (context) => const AddFoodItemActivity(),
+        '/food/history': (context) => const FoodHistoryActivity(),
         '/food': (context) => const FoodActivity(),
+        '/sleep/record': (context) => const RecordSleepActivity(),
         '/sleep': (context) => const SleepActivity(),
         '/body': (context) => const BodyActivity(),
         '/water': (context) => const WaterActivity()
@@ -182,6 +186,16 @@ class _MyHomePageState extends State<MyHomePage> {
     _stepCountStream.listen(onStepCount).onError(onStepCountError);
 
     if (!mounted) return;
+  }
+
+  addFoodRecord(context) {
+    Navigator.pushNamed(
+        context,
+        '/food',
+        arguments: {
+          'isAddFoodRecord': true
+        }
+    );
   }
 
   @override
@@ -592,7 +606,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.pushNamed(context, '/food');
+                          Navigator.pushNamed(
+                            context,
+                            '/food',
+                            arguments: {
+                              'isAddFoodRecord': false
+                            }
+                          );
                         },
                         child: Container(
                           margin: EdgeInsets.symmetric(
@@ -651,7 +671,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      handler.addNewFoodRecord('Завтрак');
+                                      addFoodRecord(context);
+                                      // handler.addNewFoodRecord('Завтрак');
                                     },
                                     child: Text(
                                       'Запись'
@@ -4099,7 +4120,7 @@ class _SleepActivityState extends State<SleepActivity> {
                       'Добавить запись'
                     ),
                     onPressed: () {
-
+                      Navigator.pushNamed(context, '/sleep/record');
                     },
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all<Color>(
@@ -4132,14 +4153,232 @@ class FoodActivity extends StatefulWidget {
 
 class _FoodActivityState extends State<FoodActivity> {
 
+  late DatabaseHandler handler;
+
   var contextMenuBtns = {
     'Устновить норму',
     'Мое питание',
     'О \"Питании и диете\"',
   };
 
+  List<String> foodTypes = [
+    'Завтрак',
+    'Обед',
+    'Ужин',
+    'Утренний перекус',
+    'Дневной перекус',
+    'Вечерний перекус'
+  ];
+
+  FoodType selectedFoodType = FoodType.none;
+
+  List<Widget> foodRecords = [];
+
+  setFoodType(BuildContext context) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Прием пищи'),
+        content: Container(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Radio<FoodType>(
+                    value: FoodType.breakfast,
+                    groupValue: selectedFoodType,
+                    onChanged: (value) {
+                      // setState(() {
+                        selectedFoodType = value!;
+                      // });
+                    }
+                  ),
+                  Text(
+                    'Завтрак'
+                  )
+                ]
+              ),
+              Row(
+                children: [
+                  Radio<FoodType>(
+                    value: FoodType.lanch,
+                    groupValue: selectedFoodType,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedFoodType = value!;
+                      });
+                    }
+                  ),
+                  Text(
+                    'Обед'
+                  )
+                ]
+              ),
+              Row(
+                children: [
+                  Radio<FoodType>(
+                    value: FoodType.dinner,
+                    groupValue: selectedFoodType,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedFoodType = value!;
+                      });
+                    }
+                  ),
+                  Text(
+                    'Ужин'
+                  )
+                ]
+              ),
+              Row(
+                children: [
+                  Radio<FoodType>(
+                    value: FoodType.morningMeal,
+                    groupValue: selectedFoodType,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedFoodType = value!;
+                      });
+                    }
+                  ),
+                  Text(
+                    'Утренний перекус'
+                  )
+                ]
+              ),
+              Row(
+                children: [
+                  Radio<FoodType>(
+                    value: FoodType.dayMeal,
+                    groupValue: selectedFoodType,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedFoodType = value!;
+                      });
+                    }
+                  ),
+                  Text(
+                      'Дневной перекус'
+                  )
+                ]
+              ),
+              Row(
+                children: [
+                  Radio<FoodType>(
+                    value: FoodType.eveningMeal,
+                    groupValue: selectedFoodType,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedFoodType = value!;
+                      });
+                    }
+                  ),
+                  Text(
+                    'Вечерний перекус'
+                  )
+                ]
+              ),
+            ]
+          )
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              int foodTypeIndex = selectedFoodType.index - 1;
+              String foodType = foodTypes[foodTypeIndex];
+              Navigator.pushNamed(
+                context,
+                '/food/record',
+                arguments: {
+                  'foodType': foodType
+                }
+              );
+            },
+            child: const Text('Готово')
+          )
+        ]
+      )
+    );
+  }
+
+  addFoodRecord(FoodRecord record) {
+    String foodRecordType = record.type;
+    Container foodRecord = Container(
+      child: Row(
+        children: [
+          Container(
+            margin: EdgeInsets.symmetric(
+              horizontal: 15
+            ),
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 200, 200, 200),
+              borderRadius: BorderRadius.circular(100.0)
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                    '0'
+                ),
+                Text(
+                    'Ккал'
+                )
+              ]
+            )
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Divider(
+                thickness: 1.0,
+                color: Color.fromARGB(255, 150, 150, 150)
+              ),
+              Text(
+                foodRecordType
+              ),
+              Text(
+                '-------'
+              )
+            ]
+          )
+        ]
+      ),
+      margin: EdgeInsets.symmetric(
+        vertical: 15
+      )
+    );
+    foodRecords.add(foodRecord);
+  }
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    /*
+    не работает автоматическое открытие диалога
+    final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+    if (arguments != null) {
+      bool isAddFoodRecord = arguments['isAddFoodRecord'];
+      print('$isAddFoodRecord');
+      if (isAddFoodRecord) {
+        setFoodType(context);
+      }
+    }
+    */
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -4236,10 +4475,42 @@ class _FoodActivityState extends State<FoodActivity> {
                       width: 100,
                       height: 100,
                     ),
-                    Text(
-                      'Отслеживание питания поможет придерживаться\nздоровой сбалансированной диеты',
-                      textAlign: TextAlign.center
-                    ),
+                    FutureBuilder(
+                      future: this.handler.retrieveFoodRecords(),
+                      builder: (BuildContext context, AsyncSnapshot<List<FoodRecord>> snapshot) {
+                        int snapshotsCount = 0;
+                        if (snapshot.data != null) {
+                          snapshotsCount = snapshot.data!.length;
+                          foodRecords = [];
+                          for (int snapshotIndex = 0; snapshotIndex < snapshotsCount; snapshotIndex++) {
+                            addFoodRecord(snapshot.data!.elementAt(snapshotIndex));
+                          }
+                        }
+                        if (snapshot.hasData) {
+                          return Column(
+                            children: [
+                              Container(
+                                  height: 250,
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      children: foodRecords
+                                    )
+                                  )
+                              )
+                            ]
+                          );
+                        } else {
+                          return Text(
+                            'Отслеживание питания поможет придерживаться\nздоровой сбалансированной диеты',
+                            textAlign: TextAlign.center
+                          );
+                        }
+                        return Text(
+                          'Отслеживание питания поможет придерживаться\nздоровой сбалансированной диеты',
+                          textAlign: TextAlign.center
+                        );
+                      }
+                    )
                   ]
                 )
               ),
@@ -4248,7 +4519,7 @@ class _FoodActivityState extends State<FoodActivity> {
                   'Запись'
                 ),
                 onPressed: () {
-
+                  setFoodType(context);
                 },
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all<Color>(
@@ -4876,6 +5147,808 @@ class _ActiveActivityState extends State<ActiveActivity> {
           )
         )
       )
+    );
+  }
+
+}
+
+class RecordSleepActivity extends StatefulWidget {
+
+  const RecordSleepActivity({Key? key}) : super(key: key);
+
+  @override
+  State<RecordSleepActivity> createState() => _RecordSleepActivityState();
+
+}
+
+class _RecordSleepActivityState extends State<RecordSleepActivity> {
+
+  late DatabaseHandler handler;
+
+  addSleepRecord(BuildContext context) {
+    handler.addNewSleepRecord('00', '00', '22.11.2000');
+    Navigator.pushNamed(context, '/sleep');
+  }
+
+  setSleepDay(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now().subtract(
+        Duration(
+          days: 365
+        )
+      ),
+      lastDate: DateTime.now().add(
+        Duration(
+          days: 365
+        )
+      )
+    );
+  }
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Записать вручную'
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Container(
+            margin: EdgeInsets.symmetric(
+              vertical: 15
+            ),
+            padding: EdgeInsets.all(
+              15
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Column(
+              children: [
+                TextButton(
+                  child: Text(
+                    'пн, 21 февр.'
+                  ),
+                  onPressed: () {
+                    setSleepDay(context);
+                  },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 175, 175, 175)
+                    ),
+                    foregroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 0, 0, 0)
+                    ),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100.0),
+                            side: BorderSide(
+                                color: Color.fromARGB(255, 150, 150, 150)
+                            )
+                        )
+                    ),
+                    fixedSize: MaterialStateProperty.all<Size>(
+                      Size(
+                        125.0,
+                        45.0
+                      )
+                    )
+                  )
+                ),
+                Container(
+                  width: 100,
+                  height: 100,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '8',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24
+                      )
+                    ),
+                    Container(
+                      child: Text(
+                        'ч',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold
+                        )
+                      ),
+                      margin: EdgeInsets.only(
+                        left: 5
+                      )
+                    )
+                  ]
+                ),
+                Text(
+                'Время сна',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 175, 175, 175)
+                  )
+                )
+              ]
+            )
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 0, 0, 0)
+                  ),
+                  fixedSize: MaterialStateProperty.all<Size>(
+                    Size(
+                      100.0,
+                      45.0
+                    )
+                  )
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/sleep');
+                },
+                child: Text(
+                  'Отмена'
+                )
+              ),
+              TextButton(
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 0, 0, 0)
+                  ),
+                  fixedSize: MaterialStateProperty.all<Size>(
+                    Size(
+                      100.0,
+                      45.0
+                    )
+                  )
+                ),
+                onPressed: () {
+                  addSleepRecord(context);
+                },
+                child: Text(
+                  'Сохр.'
+                )
+              )
+            ]
+          )
+        ]
+      )
+    );
+  }
+
+}
+
+class RecordFoodActivity  extends StatefulWidget {
+
+  const RecordFoodActivity({Key? key}) : super(key: key);
+
+  @override
+  State<RecordFoodActivity> createState() => _RecordFoodActivityState();
+
+}
+
+class _RecordFoodActivityState extends State<RecordFoodActivity> {
+
+  late DatabaseHandler handler;
+
+  List<Row> foodItems = [];
+
+  List<bool> foodItemsSelectors = [];
+
+  String initialBtnTitle = 'Проп еду.';
+
+  String foodHistoryBtnTitle = 'Далее';
+
+  String nextBtnTitle = '';
+
+  String foodType = '';
+
+  addFoodItem(FoodItem item) {
+    int foodItemIndex = foodItems.length;
+    foodItemsSelectors.add(false);
+    String foodItemName = item.name;
+    int foodItemCallories = item.callories;
+    Row foodItem = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          children: [
+            Text(
+              '${foodItemName}'
+            ),
+            Text(
+              '${foodItemCallories} ккал'
+            )
+          ]
+        ),
+        Row(
+          children: [
+            VerticalDivider(
+                thickness: 1
+            ),
+            Checkbox(
+              value: foodItemsSelectors[foodItemIndex],
+              onChanged: (value) {
+                setState(() {
+                  foodItemsSelectors[foodItemIndex] = value!;
+                  bool isFoodItemSelected = foodItemsSelectors.any((element) => element);
+                  if (isFoodItemSelected) {
+                    nextBtnTitle = foodHistoryBtnTitle;
+                  } else {
+                    nextBtnTitle = initialBtnTitle;
+                  }
+                });
+              }
+            )
+          ]
+        )
+      ]
+    );
+    foodItems.add(foodItem);
+  }
+
+    goNext(context) {
+      bool isFoodItemSelected = foodItemsSelectors.any((element) => element);
+      if (isFoodItemSelected) {
+        Navigator.pushNamed(
+          context,
+          '/food/history',
+          arguments: {
+            'foodType': foodType
+          });
+      } else {
+        Navigator.pushNamed(
+          context,
+          '/food',
+          arguments: {
+            'isAddFoodRecord': false
+          }
+        );
+      }
+    }
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+        nextBtnTitle = initialBtnTitle;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    setState(() {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      if (arguments != null) {
+        print(arguments['foodType']);
+        foodType = arguments['foodType'];
+      }
+    });
+
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(
+              foodType
+          ),
+
+          actions: [
+            FlatButton(
+              child: Text(
+                nextBtnTitle,
+                style: TextStyle(
+                  fontSize: 20
+                )
+              ),
+              onPressed: () {
+                goNext(context);
+              }
+            )
+          ]
+        ),
+        backgroundColor: Color.fromARGB(255, 225, 225, 225),
+        body: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 255, 255, 255)
+              ),
+              padding: EdgeInsets.all(
+                15
+              ),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/food/add');
+                    },
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.add
+                        ),
+                        Text(
+                          'Добав. нов. прием пищи',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold
+                          )
+                        )
+                      ]
+                    )
+                  ),
+                  FutureBuilder(
+                    future: this.handler.retrieveFoodItems(),
+                    builder: (BuildContext context, AsyncSnapshot<List<FoodItem>> snapshot) {
+                      int snapshotsCount = 0;
+                      if (snapshot.data != null) {
+                        snapshotsCount = snapshot.data!.length;
+                        foodItems = [];
+                        for (int snapshotIndex = 0; snapshotIndex < snapshotsCount; snapshotIndex++) {
+                          addFoodItem(snapshot.data!.elementAt(snapshotIndex));
+                        }
+                      }
+                      if (snapshot.hasData) {
+                        return Column(
+                            children: [
+                              Container(
+                                  height: 250,
+                                  child: SingleChildScrollView(
+                                      child: Column(
+                                          children: foodItems
+                                      )
+                                  )
+                              )
+                            ]
+                        );
+                      } else {
+                        return Column(
+
+                        );
+                      }
+                      return Column(
+
+                      );
+                    }
+                  )
+                ]
+              )
+            )
+          ]
+        )
+    );
+  }
+
+}
+
+class AddFoodItemActivity extends StatefulWidget {
+
+  const AddFoodItemActivity({Key? key}) : super(key: key);
+
+  @override
+  State<AddFoodItemActivity> createState() => _AddFoodItemActivityState();
+
+}
+
+class _AddFoodItemActivityState extends State<AddFoodItemActivity> {
+
+  late DatabaseHandler handler;
+  String foodItemName = '';
+  int foodItemkKals = 0;
+
+  addFoodItem(BuildContext context) {
+    handler.addNewFoodItem(foodItemName, foodItemkKals, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '');
+    Navigator.pushNamed(context, '/food/record');
+  }
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return (
+      Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Добав. нов. прием пищи'
+          )
+        ),
+        backgroundColor: Color.fromARGB(255, 225, 225, 225),
+        body: Column(
+          children: [
+            Container(
+              child: TextField(
+                decoration: new InputDecoration.collapsed(
+                  hintText: 'Название продукта',
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      width: 1.0
+                    )
+                  )
+                ),
+                // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                onChanged: (value) {
+                  setState(() {
+                    foodItemName = value;
+                  });
+                }
+              )
+            ),
+            Row(
+              children: [
+                Text(
+                    'Калорий на порцию'
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(
+                        left: 150
+                      ),
+                      width: 75,
+                      child: TextField(
+                        decoration: new InputDecoration.collapsed(
+                          hintText: '',
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              width: 1.0
+                            )
+                          )
+                        ),
+                        // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                        onChanged: (value) {
+                          setState(() {
+                            foodItemkKals = int.parse(value);
+                          });
+                        }
+                      )
+                    ),
+                    Text(
+                      'ккал'
+                    )
+                  ]
+                )
+              ]
+            ),
+            Container(
+              margin: EdgeInsets.symmetric(
+                vertical: 25
+              ),
+              child: TextButton(
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 0, 0, 0)
+                  ),
+                  backgroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 175, 175, 175)
+                  ),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100.0),
+                      side: BorderSide(
+                        color: Color.fromARGB(255, 150, 150, 150)
+                      )
+                    )
+                  )
+                ),
+                onPressed: () {
+
+                },
+                child: Text(
+                  'Добав. питат. вещества',
+                  textAlign: TextAlign.center
+                )
+              )
+            )
+          ]
+        ),
+        persistentFooterButtons: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                child: Text(
+                  'Отмена'
+                ),
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 0, 0, 0)
+                  )
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/food/record');
+                }
+              ),
+              TextButton(
+                child: Text(
+                  'Сохранить'
+                ),
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.all<Color>(
+                    Color.fromARGB(255, 0, 0, 0)
+                  )
+                ),
+                onPressed: () {
+                  addFoodItem(context);
+                }
+              )
+            ]
+          )
+        ],
+      )
+    );
+  }
+
+}
+
+class FoodHistoryActivity extends StatefulWidget {
+
+  const FoodHistoryActivity({Key? key}) : super(key: key);
+
+  @override
+  State<FoodHistoryActivity> createState() => _FoodHistoryActivityState();
+
+}
+
+class _FoodHistoryActivityState extends State<FoodHistoryActivity> {
+
+  late DatabaseHandler handler;
+  String foodType = '';
+  var contextMenuBtns = {
+    'Завтрак',
+    'Обед',
+    'Ужин',
+    'Утренний перекус',
+    'Дневной перекус',
+    'Вечерний перекус'
+  };
+
+  addFoodRecord(context) {
+    handler.addNewFoodRecord(foodType);
+    Navigator.pushNamed(context, '/food');
+  }
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    setState(() {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      if (arguments != null) {
+        print(arguments['foodType']);
+        foodType = arguments['foodType'];
+      }
+    });
+
+    return (
+        Scaffold(
+            appBar: AppBar(
+              title: Text(
+                'Журнал питания'
+              ),
+              actions: [
+                FlatButton(
+                  child: Text(
+                    'Готово',
+                    style: TextStyle(
+                      fontSize: 20
+                    )
+                  ),
+                  onPressed: () {
+                    addFoodRecord(context);
+                  }
+                )
+              ]
+            ),
+            backgroundColor: Color.fromARGB(255, 225, 225, 225),
+            body: Column(
+                children: [
+                  PopupMenuButton(
+                    itemBuilder: (BuildContext context) {
+                      return contextMenuBtns.map((String choice) {
+                        return PopupMenuItem<String>(
+                            value: choice,
+                            child: Text(choice)
+                        );
+                      }).toList();
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                            foodType,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24
+                            )
+                        ),
+                        Icon(
+                            Icons.arrow_drop_down
+                        )
+                      ]
+                    ),
+                    onSelected: (String selectedMenuItemIndex) {
+                      print('selectedMenuItemIndex: $selectedMenuItemIndex');
+                      setState(() {
+                        foodType = '${selectedMenuItemIndex}';
+                      });
+                    },
+                  ),
+                  TextButton(
+                    child: Text(
+                      '17:48',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18
+                      )
+                    ),
+                    onPressed: () {
+
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 200, 200, 200)
+                      ),
+                      foregroundColor: MaterialStateProperty.all<Color>(
+                          Color.fromARGB(255, 0, 0, 0)
+                      ),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100.0)
+                        )
+                      ),
+                      fixedSize: MaterialStateProperty.all<Size>(
+                        Size(
+                          175.0,
+                          45.0
+                        )
+                      )
+                    )
+                  ),
+                  Container(
+                    margin: EdgeInsets.symmetric(
+                        vertical: 15
+                    ),
+                    padding: EdgeInsets.all(
+                      15
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Всего каллорий: 50 ккал',
+                              style: TextStyle(
+                                fontSize: 20
+                              )
+                            ),
+                            Text(
+                              'Углеводы 0 г, Жиры 0 г, Протеин 0 г',
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 175, 175, 175)
+                              )
+                            )
+                          ]
+                        ),
+                        Icon(
+                          Icons.linked_camera_sharp
+                        )
+                      ]
+                    )
+                  ),
+                  Container(
+                    margin: EdgeInsets.symmetric(
+                      vertical: 15
+                    ),
+                    padding: EdgeInsets.all(
+                      15
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                    ),
+                    child: Column(
+                      children: [
+                        GestureDetector(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.add
+                              ),
+                              Text(
+                                'Добавить продукты',
+                                style: TextStyle(
+                                  fontSize: 20
+                                )
+                              )
+                            ]
+                          ),
+                          onTap: () {
+                            Navigator.pushNamed(context, '/food/record');
+                          }
+                        )
+                      ]
+                    )
+                  ),
+                  TextButton(
+                    child: Text(
+                      'Сохр. как польз. блюдо',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18
+                      )
+                    ),
+                    onPressed: () {
+
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 200, 200, 200)
+                      ),
+                      foregroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 0, 0, 0)
+                      ),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100.0)
+                        )
+                      ),
+                      fixedSize: MaterialStateProperty.all<Size>(
+                        Size(
+                          275.0,
+                          45.0
+                        )
+                      )
+                    )
+                  )
+                ]
+            )
+        )
     );
   }
 
