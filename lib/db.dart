@@ -185,4 +185,30 @@ class DatabaseHandler {
     return returnedFoodRecords;
   }
 
+  Future<int> insertExerciseRecords(List<ExerciseRecord> exerciseRecords) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    for(var exerciseRecord in exerciseRecords){
+      result = await db.insert('exercise_records', exerciseRecord.toMap());
+    }
+    return result;
+  }
+
+  Future<int> addNewExerciseRecord(String type, String datetime, String duration) async {
+    ExerciseRecord firstExerciseRecord = ExerciseRecord(
+      type: type,
+      datetime: datetime,
+      duration: duration
+    );
+    List<ExerciseRecord> listOfExerciseRecords = [firstExerciseRecord];
+    return await insertExerciseRecords(listOfExerciseRecords);
+  }
+
+  Future<List<ExerciseRecord>> retrieveExerciseRecords() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('exercise_records');
+    var returnedExerciseRecords = queryResult.map((e) => ExerciseRecord.fromMap(e)).toList();
+    return returnedExerciseRecords;
+  }
+
 }

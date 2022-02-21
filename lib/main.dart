@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:sqlite_viewer/sqlite_viewer.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:pedometer/pedometer.dart';
 
 import 'db.dart';
 import 'models.dart';
@@ -68,6 +69,10 @@ class _MyHomePageState extends State<MyHomePage> {
     'Уведомления',
     'Настр.',
   };
+
+  late Stream<StepCount> _stepCountStream;
+  late Stream<PedestrianStatus> _pedestrianStatusStream;
+  String _status = '?', _steps = '?';
 
   void addGlass() {
     setState(() {
@@ -138,6 +143,47 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void onStepCount(StepCount event) {
+    print(event);
+    setState(() {
+      _steps = event.steps.toString();
+    });
+  }
+
+  void onPedestrianStatusChanged(PedestrianStatus event) {
+    print(event);
+    setState(() {
+      _status = event.status;
+    });
+  }
+
+  void onPedestrianStatusError(error) {
+    print('onPedestrianStatusError: $error');
+    setState(() {
+      _status = 'Pedestrian Status not available';
+    });
+    print(_status);
+  }
+
+  void onStepCountError(error) {
+    print('onStepCountError: $error');
+    setState(() {
+      _steps = 'Step Count not available';
+    });
+  }
+
+  initPlatformState() {
+    _pedestrianStatusStream = Pedometer.pedestrianStatusStream;
+    _pedestrianStatusStream
+        .listen(onPedestrianStatusChanged)
+        .onError(onPedestrianStatusError);
+
+    _stepCountStream = Pedometer.stepCountStream;
+    _stepCountStream.listen(onStepCount).onError(onStepCountError);
+
+    if (!mounted) return;
+  }
+
   @override
   initState() {
     super.initState();
@@ -148,6 +194,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
       });
     });
+    initPlatformState();
+
   }
 
   @override
@@ -354,7 +402,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           children: [
                                             Container(
                                               child: Text(
-                                                '0',
+                                                _steps,
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold
                                                 )
@@ -449,7 +497,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                       )
                                     ),
                                     onPressed: () {
-                                                                
+                                      handler.addNewExerciseRecord('Ходьба', '22.11.2000', '00:00:00');
                                     },
                                     child: Icon(
                                       Icons.directions_walk
@@ -476,7 +524,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           )
                                       ),
                                       onPressed: () {
-  
+                                        handler.addNewExerciseRecord('Бег', '22.11.2000', '00:00:00');
                                       },
                                       child: Icon(
                                           Icons.directions_run
@@ -503,7 +551,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           )
                                       ),
                                       onPressed: () {
-  
+                                        handler.addNewExerciseRecord('Велоспорт', '22.11.2000', '00:00:00');
                                       },
                                       child: Icon(
                                           Icons.bike_scooter
@@ -3894,39 +3942,39 @@ class _BodyActivityState extends State<BodyActivity> {
                   color: Color.fromARGB(255, 255, 255, 255)
                 ),
                 child: FutureBuilder(
-                    future: this.handler.retrieveBodyRecords(),
-                    builder: (BuildContext context, AsyncSnapshot<List<BodyRecord>> snapshot) {
-                      int snapshotsCount = 0;
-                      if (snapshot.data != null) {
-                        snapshotsCount = snapshot.data!.length;
-                        bodyRecords = [];
-                        for (int snapshotIndex = 0; snapshotIndex <
-                            snapshotsCount; snapshotIndex++) {
-                          addBodyRecord(snapshot.data!.elementAt(snapshotIndex));
-                        }
+                  future: this.handler.retrieveBodyRecords(),
+                  builder: (BuildContext context, AsyncSnapshot<List<BodyRecord>> snapshot) {
+                    int snapshotsCount = 0;
+                    if (snapshot.data != null) {
+                      snapshotsCount = snapshot.data!.length;
+                      bodyRecords = [];
+                      for (int snapshotIndex = 0; snapshotIndex <
+                          snapshotsCount; snapshotIndex++) {
+                        addBodyRecord(snapshot.data!.elementAt(snapshotIndex));
                       }
-                      if (snapshot.hasData) {
-                        return Column(
-                            children: [
-                              Container(
-                                  height: 250,
-                                  child: SingleChildScrollView(
-                                      child: Column(
-                                          children: bodyRecords
-                                      )
-                                  )
-                              )
-                            ]
-                        );
-                      } else {
-                        return Column(
-
-                        );
-                      }
+                    }
+                    if (snapshot.hasData) {
+                      return Column(
+                          children: [
+                            Container(
+                                height: 250,
+                                child: SingleChildScrollView(
+                                    child: Column(
+                                        children: bodyRecords
+                                    )
+                                )
+                            )
+                          ]
+                      );
+                    } else {
                       return Column(
 
                       );
                     }
+                    return Column(
+
+                    );
+                  }
                 )
               ),
               TextButton(
@@ -4245,6 +4293,8 @@ class ExerciseActivity extends StatefulWidget {
 
 class _ExerciseActivityState extends State<ExerciseActivity> {
 
+  late DatabaseHandler handler;
+
   var contextMenuBtns = {
     'Скрыть автозаписи',
     'Удалить'
@@ -4252,54 +4302,68 @@ class _ExerciseActivityState extends State<ExerciseActivity> {
 
   List<Column> exercisesRecords = [];
 
-  void addExerciseRecord() {
-    Column exerciseRecord =       Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Вс. 13 февр.',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold
-                )
-              ),
-              Text(
-                '00:00:00'
+  void addExerciseRecord(ExerciseRecord record) {
+    String exerciseRecordType = record.type;
+    String exerciseRecordDatetime = record.datetime;
+    String exerciseRecordDuration = record.duration;
+    Column exerciseRecord = Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '$exerciseRecordDatetime',
+              style: TextStyle(
+                fontWeight: FontWeight.bold
               )
-            ]
-          ),
-          Divider(
-            thickness: 1,
-            color: Color.fromARGB(255, 150, 150, 150),
-          ),
-          Row(
-            children: [
-              Icon(
-                Icons.directions_run
-              ),
-              Text(
-                'Бег'
-              )
-            ]
-          ),
-          Text(
-            '00:00:00'
-          ),
-          Text(
-            '22:47'
-          )
-        ]
+            ),
+            Text(
+              '$exerciseRecordDuration'
+            )
+          ]
+        ),
+        Divider(
+          thickness: 1,
+          color: Color.fromARGB(255, 150, 150, 150),
+        ),
+        Row(
+          children: [
+            Icon(
+              Icons.directions_run
+            ),
+            Text(
+              '$exerciseRecordType'
+            )
+          ]
+        ),
+        Text(
+          '$exerciseRecordDuration'
+        ),
+        Text(
+          '$exerciseRecordDatetime'
+        )
+      ]
     );
     exercisesRecords.add(exerciseRecord);
   }
 
   @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
 
-    addExerciseRecord();
-    addExerciseRecord();
-    addExerciseRecord();
+    // addExerciseRecord();
+    // addExerciseRecord();
+    // addExerciseRecord();
 
     return Scaffold(
       appBar: AppBar(
@@ -4452,8 +4516,39 @@ class _ExerciseActivityState extends State<ExerciseActivity> {
                       margin: EdgeInsets.symmetric(
                         vertical: 25
                       ),
-                      child: Column(
-                        children: exercisesRecords
+                      child: FutureBuilder(
+                        future: this.handler.retrieveExerciseRecords(),
+                        builder: (BuildContext context, AsyncSnapshot<List<ExerciseRecord>> snapshot) {
+                          int snapshotsCount = 0;
+                          if (snapshot.data != null) {
+                            snapshotsCount = snapshot.data!.length;
+                            exercisesRecords = [];
+                            for (int snapshotIndex = 0; snapshotIndex < snapshotsCount; snapshotIndex++) {
+                              addExerciseRecord(snapshot.data!.elementAt(snapshotIndex));
+                            }
+                          }
+                          if (snapshot.hasData) {
+                            return Column(
+                              children: [
+                                Container(
+                                  height: 250,
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      children: exercisesRecords
+                                    )
+                                  )
+                                )
+                              ]
+                            );
+                          } else {
+                            return Column(
+
+                            );
+                          }
+                          return Column(
+
+                          );
+                        }
                       )
                     )
                   ]

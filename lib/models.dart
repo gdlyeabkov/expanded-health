@@ -165,3 +165,34 @@ class FoodRecord {
         type = res["type"];
 
 }
+
+class ExerciseRecord {
+
+  final int? id;
+  final String type;
+  final String datetime;
+  final String duration;
+
+  ExerciseRecord({
+    this.id,
+    required this.type,
+    required this.datetime,
+    required this.duration,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'type': type,
+      'datetime': datetime,
+      'duration': duration
+    };
+  }
+
+  ExerciseRecord.fromMap(Map<String, dynamic> res)
+      : id = res["id"],
+        type = res["type"],
+        datetime = res["datetime"],
+        duration = res["duration"];
+
+}

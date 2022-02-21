@@ -32,6 +32,7 @@ dependencies:
   sqflite:
   path:
   sqlite_viewer: ^1.0.5
+  pedometer: ^3.0.0
 
 
   # The following adds the Cupertino Icons font to your application.
