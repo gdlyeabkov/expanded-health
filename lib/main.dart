@@ -6,7 +6,8 @@ import 'package:flutter/rendering.dart';
 import 'package:sqlite_viewer/sqlite_viewer.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:pedometer/pedometer.dart';
+// import 'package:pedometer/pedometer.dart';
+import 'package:intl/intl.dart';
 
 import 'db.dart';
 import 'models.dart';
@@ -33,6 +34,8 @@ class MyApp extends StatelessWidget {
         ),
         '/active': (context) => const ActiveActivity(),
         '/walk': (context) => const WalkActivity(),
+        '/exercise/add': (context) => const AddExerciseActivity(),
+        '/exercise/list': (context) => const ExercisesListActivity(),
         '/exercise': (context) => const ExerciseActivity(),
         '/food/record': (context) => const RecordFoodActivity(),
         '/food/add': (context) => const AddFoodItemActivity(),
@@ -74,9 +77,13 @@ class _MyHomePageState extends State<MyHomePage> {
     'Настр.',
   };
 
+  /*
+  sdk не позволяет использовать педометр
   late Stream<StepCount> _stepCountStream;
   late Stream<PedestrianStatus> _pedestrianStatusStream;
   String _status = '?', _steps = '?';
+  */
+  String _steps = '0';
 
   void addGlass() {
     setState(() {
@@ -147,6 +154,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  /*
+  sdk не позволяет использовать pedometer
   void onStepCount(StepCount event) {
     print(event);
     setState(() {
@@ -187,6 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (!mounted) return;
   }
+  */
 
   addFoodRecord(context) {
     Navigator.pushNamed(
@@ -196,6 +206,10 @@ class _MyHomePageState extends State<MyHomePage> {
           'isAddFoodRecord': true
         }
     );
+  }
+
+  addSleepRecord(context) {
+    Navigator.pushNamed(context, '/sleep/record');
   }
 
   @override
@@ -208,7 +222,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
       });
     });
+    /*
+    sdk не позволяет использовать pedometer
     initPlatformState();
+    */
 
   }
 
@@ -592,10 +609,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                           )
                                       ),
                                       onPressed: () {
-  
+                                        Navigator.pushNamed(context, '/exercise/list');
                                       },
                                       child: Icon(
-                                          Icons.list
+                                        Icons.list
                                       )
                                   )
                                 ]
@@ -748,7 +765,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                        handler.addNewSleepRecord('00', '00', '22.11.2000');
+                                        // handler.addNewSleepRecord('00', '00', '22.11.2000');
+                                        addSleepRecord(context);
                                       },
                                       child: Text(
                                         'Запись'
@@ -5164,13 +5182,38 @@ class RecordSleepActivity extends StatefulWidget {
 class _RecordSleepActivityState extends State<RecordSleepActivity> {
 
   late DatabaseHandler handler;
+  String sleepDate = '00.00.0000';
+  String sleepDateLabel = 'пн, 21 февр.';
+  var weekDayLabels = <String, String>{
+    'Monday': 'пн',
+    'Tuesday': 'вт',
+    'Wednesday': 'ср',
+    'Thursday': 'чт',
+    'Friday': 'пт',
+    'Saturday': 'сб',
+    'Sunday': 'вс'
+  };
+  var monthsLabels = <int, String>{
+    0: 'янв.',
+    1: 'февр.',
+    2: 'мар.',
+    3: 'апр.',
+    4: 'мая',
+    5: 'июн.',
+    6: 'июл.',
+    7: 'авг.',
+    8: 'сен.',
+    9: 'окт.',
+    10: 'ноя.',
+    11: 'дек'
+  };
 
   addSleepRecord(BuildContext context) {
-    handler.addNewSleepRecord('00', '00', '22.11.2000');
+    handler.addNewSleepRecord('00', '00', sleepDate);
     Navigator.pushNamed(context, '/sleep');
   }
 
-  setSleepDay(BuildContext context) async {
+  setSleepDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -5185,6 +5228,24 @@ class _RecordSleepActivityState extends State<RecordSleepActivity> {
         )
       )
     );
+    setState(() {
+      bool isDatePick = pickedDate != null;
+      if (isDatePick) {
+        showSleepDate(pickedDate);
+      }
+    });
+
+  }
+
+  showSleepDate(DateTime pickedDate) {
+    int pickedDateDay = pickedDate.day;
+    int pickedDateMonth = pickedDate.month;
+    int pickedDateYear = pickedDate.year;
+    sleepDate = '${pickedDateDay}.${pickedDateMonth}.${pickedDateYear}';
+    String weekDayKey = DateFormat('EEEE').format(pickedDate);
+    String? weekDayLabel = weekDayLabels[weekDayKey];
+    String? monthLabel = monthsLabels[pickedDateMonth];
+    sleepDateLabel = '${weekDayLabel}, ${pickedDateDay} ${monthLabel}';
   }
 
   @override
@@ -5196,6 +5257,8 @@ class _RecordSleepActivityState extends State<RecordSleepActivity> {
 
       });
     });
+    DateTime currentDate = DateTime.now();
+    showSleepDate(currentDate);
   }
 
   @override
@@ -5224,10 +5287,10 @@ class _RecordSleepActivityState extends State<RecordSleepActivity> {
               children: [
                 TextButton(
                   child: Text(
-                    'пн, 21 февр.'
+                    sleepDateLabel
                   ),
                   onPressed: () {
-                    setSleepDay(context);
+                    setSleepDate(context);
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all<Color>(
@@ -5253,8 +5316,8 @@ class _RecordSleepActivityState extends State<RecordSleepActivity> {
                   )
                 ),
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: 250,
+                  height: 250,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -5949,6 +6012,405 @@ class _FoodHistoryActivityState extends State<FoodHistoryActivity> {
                 ]
             )
         )
+    );
+  }
+
+}
+
+class ExercisesListActivity extends StatefulWidget {
+
+  const ExercisesListActivity({Key? key}) : super(key: key);
+
+  @override
+  State<ExercisesListActivity> createState() => _ExercisesListActivityState();
+
+}
+
+class _ExercisesListActivityState extends State<ExercisesListActivity> {
+
+  late DatabaseHandler handler;
+  var contextMenuBtns = {
+    'Скрыть упражнения',
+    'Сброс по умолчанию',
+    'Аксессуары'
+  };
+  List<Widget> exercises = [];
+  List<bool> exercisesSelectors = [];
+  bool isSelectionMode = false;
+
+  void addExercise(BodyRecord record) {
+    int exerciseIndex = exercises.length;
+    String exerciseName = 'Ходьба';
+    // exerciseName = record.name;
+    bool isFavoriteExercise = false;
+    // bool isFavoritedExercise = record.is_activated;
+    exercisesSelectors.add(false);
+    GestureDetector exercise = GestureDetector(
+      child: Container(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    isSelectionMode ?
+                      Checkbox(
+                        value: exercisesSelectors[exerciseIndex],
+                        onChanged: (value) {
+                          setState(() {
+                            exercisesSelectors[exerciseIndex] = !exercisesSelectors[exerciseIndex];
+                          });
+                        }
+                      )
+                    :
+                      Column()
+                  ]
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      // crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          margin: EdgeInsets.only(
+                              left: 15
+                          ),
+                          child: Icon(
+                              Icons.directions_walk,
+                              color: Color.fromARGB(255, 0, 200, 0)
+                          )
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(
+                            left: 10
+                          ),
+                          child: Text(
+                            exerciseName,
+                            style: TextStyle(
+                                fontSize: 20
+                            )
+                          )
+                        )
+                      ]
+                    ),
+                    Divider(
+                      height: 1.0,
+                      thickness: 1.0,
+                      color: Color.fromARGB(255, 0, 0, 0)
+                    )
+                  ]
+                )
+              ]
+            ),
+            Column(
+              children: [
+                isFavoriteExercise ?
+                  Icon(
+                    Icons.star_rounded,
+                    color: Color.fromARGB(255, 255, 225, 0)
+                  )
+                :
+                  Icon(
+                    Icons.star_outline_rounded,
+                    color: Color.fromARGB(255, 150, 150, 150)
+                  )
+              ]
+            )
+          ]
+        ),
+        height: 65
+      ),
+      onLongPress: () {
+        setState(() {
+          isSelectionMode = true;
+        });
+      }
+    );
+    exercises.add(exercise);
+  }
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Упражнения'
+        ),
+        actions: [
+          PopupMenuButton<String>(
+            itemBuilder: (BuildContext context) {
+              return contextMenuBtns.map((String choice) {
+                return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice)
+                );
+              }).toList();
+            },
+          )
+        ]
+      ),
+      body: FutureBuilder(
+        future: this.handler.retrieveBodyRecords(),
+        builder: (BuildContext context, AsyncSnapshot<List<BodyRecord>> snapshot) {
+          int snapshotsCount = 0;
+          if (snapshot.data != null) {
+            snapshotsCount = snapshot.data!.length;
+            exercises = [];
+            for (int snapshotIndex = 0; snapshotIndex < snapshotsCount; snapshotIndex++) {
+              addExercise(snapshot.data!.elementAt(snapshotIndex));
+            }
+          }
+          if (snapshot.hasData) {
+            return WillPopScope(
+              onWillPop: () async {
+                if (isSelectionMode) {
+                  setState(() {
+                    isSelectionMode = false;
+                    exercisesSelectors.fillRange(0, exercisesSelectors.length - 1, false);
+                  });
+                  return false;
+                }
+                return true;
+              },
+              child: Column(
+                children: [
+                  Container(
+                    height: 250,
+                    child: SingleChildScrollView(
+                      child: Column(
+                          children: exercises
+                      )
+                    )
+                  )
+                ]
+              )
+            );
+          } else {
+            return Column(
+
+            );
+          }
+          return Column(
+
+          );
+        }
+      ),
+      persistentFooterButtons: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.all<Color>(
+                  Color.fromARGB(255, 0, 0, 0)
+                )
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'Добавить тренировки'
+                  ),
+                  Icon(
+                    Icons.chevron_right
+                  )
+                ]
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/exercise/add');
+              }
+            )
+          ]
+        )
+      ],
+    );
+  }
+
+}
+
+class AddExerciseActivity extends StatefulWidget {
+
+  const AddExerciseActivity({Key? key}) : super(key: key);
+
+  @override
+  State<AddExerciseActivity> createState() => _AddExerciseActivityState();
+
+}
+
+class _AddExerciseActivityState extends State<AddExerciseActivity> {
+
+  late DatabaseHandler handler;
+  List<Widget> exercises = [];
+  List<bool> exercisesSelectors = [];
+
+  void addExercise(BodyRecord record) {
+    int exerciseIndex = exercises.length;
+    String exerciseName = 'Ходьба';
+    // exerciseName = record.name;
+    exercisesSelectors.add(false);
+    Row exercise = Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Checkbox(
+          value: exercisesSelectors[exerciseIndex],
+          onChanged: (value) {
+            setState(() {
+              exercisesSelectors[exerciseIndex] = !exercisesSelectors[exerciseIndex];
+            });
+          }
+        ),
+        Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(
+                    left: 15
+                  ),
+                  child: Icon(
+                    Icons.directions_walk,
+                    color: Color.fromARGB(255, 0, 200, 0)
+                  )
+                ),
+                Container(
+                  margin: EdgeInsets.only(
+                      left: 10
+                  ),
+                  child: Text(
+                    exerciseName,
+                    style: TextStyle(
+                      fontSize: 20
+                    )
+                  )
+                )
+              ]
+            ),
+            Divider(
+              height: 1.0,
+              thickness: 1.0,
+              color: Color.fromARGB(255, 0, 0, 0)
+            )
+          ]
+        )
+      ]
+    );
+    exercises.add(exercise);
+  }
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          exercisesSelectors.any((element) => element) ?
+            'Выбрано: ${exercisesSelectors.where((element) => element).length}'
+          :
+            'Добавить тренировки'
+        ),
+        actions: [
+          FlatButton(
+            textColor: Color.fromARGB(255, 255, 255, 255),
+            child: Icon(
+              Icons.search
+            ),
+            onPressed: () {
+
+            }
+          )
+        ]
+      ),
+      body: FutureBuilder(
+        future: this.handler.retrieveBodyRecords(),
+        builder: (BuildContext context, AsyncSnapshot<List<BodyRecord>> snapshot) {
+          int snapshotsCount = 0;
+          if (snapshot.data != null) {
+            snapshotsCount = snapshot.data!.length;
+            exercises = [];
+            for (int snapshotIndex = 0; snapshotIndex <
+                snapshotsCount; snapshotIndex++) {
+              addExercise(snapshot.data!.elementAt(snapshotIndex));
+            }
+          }
+          if (snapshot.hasData) {
+            return Column(
+              children: [
+                Container(
+                  height: 250,
+                  child: SingleChildScrollView(
+                    child: Column(
+                        children: exercises
+                    )
+                  )
+                )
+              ]
+            );
+          } else {
+            return Column(
+
+            );
+          }
+          return Column(
+
+          );
+        }
+      ),
+      persistentFooterButtons: [
+        Column(
+          children: [
+            exercisesSelectors.any((element) => element) ?
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.add
+                        ),
+                        Text(
+                          'Добавить'
+                        )
+                      ]
+                    ),
+                    onTap: () {
+                      Navigator.pushNamed(context, '/exercise/list');
+                    }
+                  )
+                ]
+              )
+            :
+              Row(
+                children: []
+              )
+          ]
+        )
+      ]
     );
   }
 
