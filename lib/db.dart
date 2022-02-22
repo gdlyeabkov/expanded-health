@@ -22,9 +22,9 @@ class DatabaseHandler {
         await database.execute(
             "CREATE TABLE measures(id INTEGER PRIMARY KEY, name TEXT, value TEXT)"
         );
-        addNewIndicators('', 0, 0, 0, 0, '', '', '', '', '', '', 0.0, 0.0, '', '');
+        addNewIndicators('', 0, 0, 0, false, '', '', '', '', '', '', 0.0, 0.0, '', '');
         await database.execute(
-            "CREATE TABLE body_records(id INTEGER PRIMARY KEY, marks TEXT, musculature INTEGER, fat INTEGER, weight REAL, date TEXT)"
+          "CREATE TABLE body_records(id INTEGER PRIMARY KEY, marks TEXT, musculature INTEGER, fat INTEGER, weight REAL, date TEXT)"
         );
         // await database.execute(
         //   "DROP DATABASE flutter_health.db"
@@ -60,10 +60,10 @@ class DatabaseHandler {
           print('Длина: $value.length');
           bool isPreInstall = value.length <= 0;
           if (isPreInstall) {
-            addNewIndicators('', 0, 0, 0, 0, '', '', '', '', '', '', 0.0, 0.0, '', '');
+            addNewIndicators('', 0, 0, 0, false, '', '', '', '', '', '', 0.0, 0.0, '', '');
           }
         });
-        addNewIndicators('', 0, 0, 0, 0, '', '', '', '', '', '', 0.0, 0.0, '', '');
+        addNewIndicators('', 0, 0, 0, false, '', '', '', '', '', '', 0.0, 0.0, '', '');
       },
       version: 1,
     );
@@ -85,7 +85,7 @@ class DatabaseHandler {
     return result;
   }
 
-  Future<int> addNewIndicators(String time, int water, int walk, int food, int is_exercise_enabled, String exercise_start_time, String exercise_type, String exercise_duration, String photo, String name, String gender, double growth, double weight, String birthday, String level) async {
+  Future<int> addNewIndicators(String time, int water, int walk, int food, bool is_exercise_enabled, String exercise_start_time, String exercise_type, String exercise_duration, String photo, String name, String gender, double growth, double weight, String birthday, String level) async {
     Indicators firstIndicators = Indicators(
         time: time,
         water: water,

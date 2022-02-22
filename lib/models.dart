@@ -4,7 +4,7 @@ class Indicators {
   final int water;
   final int walk;
   final int food;
-  final int is_exercise_enabled;
+  final bool is_exercise_enabled;
   final String exercise_start_time;
   final String exercise_type;
   final String exercise_duration;

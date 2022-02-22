@@ -1,13 +1,26 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 
 import 'package:sqlite_viewer/sqlite_viewer.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 // import 'package:pedometer/pedometer.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+/*
+камера требует более высокий minSdkVersion
+import 'package:camera/camera.dart';
+*/
+/*
+не работает account-manager-plugin
+import 'package:account_manager_plugin/account_manager_plugin.dart';
+*/
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart' as latLng;
 
 import 'db.dart';
 import 'models.dart';
@@ -34,6 +47,9 @@ class MyApp extends StatelessWidget {
         ),
         '/active': (context) => const ActiveActivity(),
         '/walk': (context) => const WalkActivity(),
+        '/exercise/results': (context) => const RecordExerciseResultsActivity(),
+        '/exercise/started': (context) => const RecordStartedExerciseActivity(),
+        '/exercise/record': (context) => const RecordExerciseActivity(),
         '/exercise/add': (context) => const AddExerciseActivity(),
         '/exercise/list': (context) => const ExercisesListActivity(),
         '/exercise': (context) => const ExerciseActivity(),
@@ -44,7 +60,8 @@ class MyApp extends StatelessWidget {
         '/sleep/record': (context) => const RecordSleepActivity(),
         '/sleep': (context) => const SleepActivity(),
         '/body': (context) => const BodyActivity(),
-        '/water': (context) => const WaterActivity()
+        '/water': (context) => const WaterActivity(),
+        '/account/edit': (context) => const EditMyPageActivity()
       }
     );
   }
@@ -212,6 +229,8 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.pushNamed(context, '/sleep/record');
   }
 
+
+
   @override
   initState() {
     super.initState();
@@ -226,7 +245,13 @@ class _MyHomePageState extends State<MyHomePage> {
     sdk не позволяет использовать pedometer
     initPlatformState();
     */
-
+    /*
+    не работает account-manager-plugin
+    Future getAccountFuture = getAccount();
+    getAccountFuture.then((value) {
+      print('${value.length}');
+    });
+    */
   }
 
   @override
@@ -528,64 +553,85 @@ class _MyHomePageState extends State<MyHomePage> {
                                       )
                                     ),
                                     onPressed: () {
-                                      handler.addNewExerciseRecord('Ходьба', '22.11.2000', '00:00:00');
+                                      // handler.addNewExerciseRecord('Ходьба', '22.11.2000', '00:00:00');
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/exercise/record',
+                                        arguments: {
+                                          'exerciseType': 'Ходьба'
+                                        }
+                                      );
                                     },
                                     child: Icon(
                                       Icons.directions_walk
                                     )
                                   ),
                                   TextButton(
-                                      style: ButtonStyle(
-                                          backgroundColor: MaterialStateProperty.all<Color>(
-                                              Color.fromARGB(255, 255, 255, 255)
-                                          ),
-                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                              RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(100.0),
-                                                  side: BorderSide(
-                                                      color: Color.fromARGB(255, 150, 150, 150)
-                                                  )
-                                              )
-                                          ),
-                                          fixedSize: MaterialStateProperty.all<Size>(
-                                              Size(
-                                                  45.0,
-                                                  45.0
-                                              )
-                                          )
+                                    style: ButtonStyle(
+                                      backgroundColor: MaterialStateProperty.all<Color>(
+                                        Color.fromARGB(255, 255, 255, 255)
                                       ),
-                                      onPressed: () {
-                                        handler.addNewExerciseRecord('Бег', '22.11.2000', '00:00:00');
-                                      },
-                                      child: Icon(
-                                          Icons.directions_run
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(100.0),
+                                          side: BorderSide(
+                                            color: Color.fromARGB(255, 150, 150, 150)
+                                          )
+                                        )
+                                      ),
+                                      fixedSize: MaterialStateProperty.all<Size>(
+                                        Size(
+                                          45.0,
+                                          45.0
+                                        )
                                       )
+                                    ),
+                                    onPressed: () {
+                                      // handler.addNewExerciseRecord('Бег', '22.11.2000', '00:00:00');
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/exercise/record',
+                                        arguments: {
+                                          'exerciseType': 'Бег'
+                                        }
+                                      );
+                                    },
+                                    child: Icon(
+                                      Icons.directions_run
+                                    )
                                   ),
                                   TextButton(
                                       style: ButtonStyle(
-                                          backgroundColor: MaterialStateProperty.all<Color>(
-                                              Color.fromARGB(255, 255, 255, 255)
-                                          ),
-                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                              RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(100.0),
-                                                  side: BorderSide(
-                                                      color: Color.fromARGB(255, 150, 150, 150)
-                                                  )
-                                              )
-                                          ),
-                                          fixedSize: MaterialStateProperty.all<Size>(
-                                              Size(
-                                                  45.0,
-                                                  45.0
-                                              )
+                                        backgroundColor: MaterialStateProperty.all<Color>(
+                                          Color.fromARGB(255, 255, 255, 255)
+                                        ),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                          RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(100.0),
+                                            side: BorderSide(
+                                              color: Color.fromARGB(255, 150, 150, 150)
+                                            )
                                           )
+                                        ),
+                                        fixedSize: MaterialStateProperty.all<Size>(
+                                          Size(
+                                            45.0,
+                                            45.0
+                                          )
+                                        )
                                       ),
                                       onPressed: () {
-                                        handler.addNewExerciseRecord('Велоспорт', '22.11.2000', '00:00:00');
+                                        // handler.addNewExerciseRecord('Велоспорт', '22.11.2000', '00:00:00');
+                                        Navigator.pushNamed(
+                                          context,
+                                          '/exercise/record',
+                                          arguments: {
+                                            'exerciseType': 'Велоспорт'
+                                          }
+                                        );
                                       },
                                       child: Icon(
-                                          Icons.bike_scooter
+                                        Icons.bike_scooter
                                       )
                                   ),
                                   TextButton(
@@ -3227,8 +3273,18 @@ class _MyHomePageState extends State<MyHomePage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              Image.network(
-                                'https://cdn3.iconfinder.com/data/icons/generic-avatars/128/avatar_portrait_man_male-256.png',
+                              // Image.network(
+                              //   'https://cdn3.iconfinder.com/data/icons/generic-avatars/128/avatar_portrait_man_male-256.png',
+                              //   width: 100,
+                              //   height: 100
+                              // ),
+                          // Image.network(
+                          //                                 'https://cdn3.iconfinder.com/data/icons/generic-avatars/128/avatar_portrait_man_male-256.png',
+                          //                                 width: 100,
+                          //                                 height: 100
+                          //                               )
+                              Image.asset(
+                                'assets/images/user_logo.png',
                                 width: 100,
                                 height: 100
                               ),
@@ -3236,8 +3292,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                 onPressed: () {
                                   Navigator.pushNamed(context, '/add_alarm');
                                 },
-                                child: Text(
+                                child: TextButton(
+                                  child: Text(
                                     'Изменить'
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pushNamed(context, '/account/edit');
+                                  }
                                 ),
                                 style: ButtonStyle(
                                   foregroundColor: MaterialStateProperty.all(
@@ -6411,6 +6472,1246 @@ class _AddExerciseActivityState extends State<AddExerciseActivity> {
           ]
         )
       ]
+    );
+  }
+
+}
+
+class RecordExerciseActivity extends StatefulWidget {
+
+  const RecordExerciseActivity({Key? key}) : super(key: key);
+
+  @override
+  State<RecordExerciseActivity> createState() => _RecordExerciseActivityState();
+
+}
+
+class _RecordExerciseActivityState extends State<RecordExerciseActivity> {
+
+  late DatabaseHandler handler;
+  String exerciseType = 'Ходьба';
+  var contextMenuBtns = {
+    ''
+  };
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    setState(() {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      if (arguments != null) {
+        print(arguments['exerciseType']);
+        exerciseType = arguments['exerciseType'];
+      }
+    });
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          exerciseType
+        ),
+        actions: [
+          FlatButton(
+            child: Icon(
+              Icons.music_note
+            ),
+            onPressed: () {
+
+            },
+            textColor: Color.fromARGB(255, 255, 255, 255)
+          ),
+          PopupMenuButton<String>(
+            itemBuilder: (BuildContext context) {
+              return contextMenuBtns.map((String choice) {
+                return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice)
+                );
+              }).toList();
+            },
+          )
+        ]
+      ),
+      body: FlutterMap(
+        options: MapOptions(
+          center: latLng.LatLng(51.5, -0.09),
+          zoom: 13.0,
+        ),
+        layers: [
+          TileLayerOptions(
+            urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            subdomains: ['a', 'b', 'c'],
+            attributionBuilder: (_) {
+              return Text("© OpenStreetMap contributors");
+            },
+          ),
+          MarkerLayerOptions(
+            markers: [
+              Marker(
+                width: 80.0,
+                height: 80.0,
+                point: latLng.LatLng(51.5, -0.09),
+                builder: (ctx) =>
+                  Container(
+                    child: Icon(
+                      Icons.near_me
+                    ),
+                  ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      persistentFooterButtons: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              child: Text(
+                'Начать'
+              ),
+              onPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  '/exercise/started',
+                  arguments: {
+                    'exerciseType': exerciseType
+                  }
+                );
+              },
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                  Color.fromARGB(255, 175, 175, 175)
+                ),
+                foregroundColor: MaterialStateProperty.all<Color>(
+                  Color.fromARGB(255, 0, 0, 0)
+                ),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(100.0),
+                    side: BorderSide(
+                      color: Color.fromARGB(255, 150, 150, 150)
+                    )
+                  )
+                ),
+                fixedSize: MaterialStateProperty.all<Size>(
+                  Size(
+                    125, 25
+                  )
+                )
+              )
+            )
+          ]
+        )
+      ],
+    );
+  }
+}
+
+class RecordStartedExerciseActivity extends StatefulWidget {
+
+  const RecordStartedExerciseActivity({Key? key}) : super(key: key);
+
+  @override
+  State<RecordStartedExerciseActivity> createState() => _RecordStartedExerciseActivityState();
+
+}
+
+class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseActivity> {
+
+  late DatabaseHandler handler;
+  String exerciseType = 'Ходьба';
+  var contextMenuBtns = {
+    ''
+  };
+  bool isStarted = true;
+  late Timer startedTimer;
+  int startedTimerSeconds = 0;
+  int startedTimerMinutes = 0;
+  int startedTimerHours = 0;
+  String stopWatchTitleSeparator = ':';
+  int countSecondsInMinute = 60;
+  int initialSeconds = 0;
+  int countMinutesInHour = 60;
+  int initialMinutes = 60;
+  String oneCharPrefix = '0';
+  String startTimerTitle = '00:00:00';
+
+  startTimer() {
+    setState(() {
+      isStarted = true;
+    });
+  }
+
+  void runStartedTimer() async {
+    setState(() {
+      isStarted = true;
+      startedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        startedTimerSeconds++;
+        bool isToggleSecond = startedTimerSeconds == countSecondsInMinute;
+        if (isToggleSecond) {
+          // setState(() {
+            bool isMinutesLeft = startedTimerMinutes >= countMinutesInHour;
+            if (isMinutesLeft) {
+              startedTimerSeconds = initialSeconds;
+              startedTimerMinutes++;
+            }
+          // });
+          bool isToggleMinute = startedTimerMinutes == countMinutesInHour;
+          if (isToggleMinute) {
+            // setState(() {
+              bool isMinutesLeft = startedTimerMinutes >= countMinutesInHour;
+              if (isMinutesLeft) {
+                startedTimerMinutes = initialMinutes;
+                startedTimerHours++;
+              }
+            // });
+          }
+        }
+        String updatedHoursText = '${startedTimerHours}';
+        int countHoursChars = updatedHoursText.length;
+        bool isAddHoursPrefix = countHoursChars == 1;
+        if (isAddHoursPrefix) {
+          updatedHoursText = oneCharPrefix + updatedHoursText;
+        }
+        String updatedMinutesText = '${startedTimerMinutes}';
+        int countMinutesChars = updatedMinutesText.length;
+        bool isAddMinutesPrefix = countMinutesChars == 1;
+        if (isAddMinutesPrefix) {
+          updatedMinutesText = oneCharPrefix + updatedMinutesText;
+        }
+        String updatedSecondsText = '${startedTimerSeconds}';
+        int countSecondsChars = updatedSecondsText.length;
+        bool isAddSecondsPrefix = countSecondsChars == 1;
+        if (isAddSecondsPrefix) {
+          updatedSecondsText = oneCharPrefix + updatedSecondsText;
+        }
+        String currentTime = updatedHoursText + ":" + updatedMinutesText + ":" + updatedSecondsText;
+        startTimerTitle = currentTime;
+
+        print('debug: $currentTime');
+
+      });
+    });
+  }
+
+  stopTimer() {
+    startedTimer.cancel();
+    setState(() {
+      isStarted = false;
+    });
+  }
+
+  completeExercise(context) {
+    stopTimer();
+    DateTime pickedDate = DateTime.now();
+    int pickedDateDay = pickedDate.day;
+    int pickedDateMonth = pickedDate.month;
+    int pickedDateYear = pickedDate.year;
+    String rawDate = '${pickedDateDay}.${pickedDateMonth}.${pickedDateYear}';
+    handler.addNewExerciseRecord(exerciseType, rawDate, startTimerTitle);
+    Navigator.pushNamed(context, '/exercise/results');
+  }
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+    runStartedTimer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    setState(() {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      if (arguments != null) {
+        print(arguments['exerciseType']);
+        exerciseType = arguments['exerciseType'];
+      }
+    });
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          exerciseType
+        ),
+        actions: [
+          FlatButton(
+            child: Icon(
+                Icons.music_note
+            ),
+            onPressed: () {
+
+            },
+            textColor: Color.fromARGB(255, 255, 255, 255)
+          ),
+          PopupMenuButton<String>(
+            itemBuilder: (BuildContext context) {
+              return contextMenuBtns.map((String choice) {
+                return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice)
+                );
+              }).toList();
+            },
+          )
+        ]
+      ),
+      body: Column(
+        children: [
+          Text(
+            'Оставшееся время'
+          ),
+          Text(
+            '10,0 км'
+          ),
+          LinearProgressIndicator(
+
+          ),
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      Text(
+                        'Длительность',
+                        textAlign: TextAlign.center
+                      ),
+                      Text(
+                        startTimerTitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold
+                        )
+                      ),
+                    ]
+                  ),
+                  Column(
+                    children: [
+                      Text(
+                          'Скорость',
+                          textAlign: TextAlign.center
+                      ),
+                      Text(
+                          '00:00:00',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold
+                          )
+                      ),
+                    ]
+                  )
+                ]
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                      children: [
+                        Text(
+                            'Темп',
+                            textAlign: TextAlign.center
+                        ),
+                        Text(
+                            '00:00:00',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold
+                            )
+                        ),
+                      ]
+                  ),
+                  Column(
+                      children: [
+                        Text(
+                            'Подъем',
+                            textAlign: TextAlign.center
+                        ),
+                        Text(
+                            '00:00:00',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold
+                            )
+                        ),
+                      ]
+                  )
+                ]
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                      children: [
+                        Text(
+                            'Калории',
+                            textAlign: TextAlign.center
+                        ),
+                        Text(
+                            '00:00:00',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold
+                            )
+                        ),
+                      ]
+                  ),
+                  Column(
+                      children: [
+                        Text(
+                            'Расстояние',
+                            textAlign: TextAlign.center
+                        ),
+                        Text(
+                            '00:00:00',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold
+                            )
+                        ),
+                      ]
+                  )
+                ]
+              )
+            ]
+          )
+        ]
+      ),
+      persistentFooterButtons: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton(
+              onPressed: () {
+
+              },
+              child: Icon(
+                Icons.lock
+              )
+            ),
+            (!isStarted ?
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      runStartedTimer();
+                    },
+                    child: Text(
+                      'Продолжить'
+                    )
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      completeExercise(context);
+                    },
+                    child: Text(
+                      'Завершить'
+                    )
+                  ),
+                ]
+              )
+            :
+              TextButton(
+                onPressed: () {
+                  stopTimer();
+                },
+                child: Text(
+                  'Пауза'
+                )
+              )
+            ),
+            TextButton(
+              onPressed: () {
+
+              },
+              child: Icon(
+                Icons.location_on
+              )
+            )
+          ]
+        )
+      ],
+    );
+  }
+
+}
+
+
+class RecordExerciseResultsActivity extends StatefulWidget {
+
+  const RecordExerciseResultsActivity({Key? key}) : super(key: key);
+
+  @override
+  State<RecordExerciseResultsActivity> createState() => _RecordExerciseResultsActivityState();
+
+}
+
+class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsActivity> {
+
+  late DatabaseHandler handler;
+  String exerciseType = 'Ходьба';
+  ImagePicker _picker = ImagePicker();
+  late XFile? _image;
+  var cameras;
+  bool isTakePhoto = false;
+
+  Future getImage() async {
+    var image = await _picker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      _image = image;
+    });
+  }
+
+  attachImages(BuildContext context) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Добавление изображения'),
+        content: Container(
+          child: Column(
+            children: [
+              TextButton(
+                child: Text(
+                  'Выбрать изображение'
+                ),
+                onPressed: () {
+                  getImage();
+                }
+              ),
+              TextButton(
+                child: Text(
+                  'Сделать снимок'
+                ),
+                onPressed: () {
+                  /*
+                  камера требует более высокий minSdkVersion
+                  final firstCamera = cameras.first;
+                  setState((){
+                    isTakePhoto = true;
+                  });
+                  */
+                }
+              )
+            ]
+          )
+        )
+      )
+    );
+  }
+
+  @override
+  initState() async {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+    _picker = ImagePicker();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          exerciseType
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+        children: [
+          Text(
+            'вт, 22 февр.'
+          ),
+          Text(
+            '16:27 - 16:27'
+          ),
+          Container(
+            width: 1000,
+            padding: EdgeInsets.all(
+              15
+            ),
+            margin: EdgeInsets.symmetric(
+              vertical: 15
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '0,0',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28
+                      )
+                    ),
+                    Text(
+                      ' км',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold
+                      )
+                    )
+                  ]
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                    '00:00:12',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20
+                      )
+                    ),
+                    Container(
+                      margin: EdgeInsets.only(
+                        left: 15
+                      ),
+                      child: Text(
+                        '-- км/ч',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold
+                        )
+                      )
+                    )
+                  ]
+                )
+              ]
+            )
+          ),
+          Container(
+            width: 1000,
+            padding: EdgeInsets.all(
+                15
+            ),
+            margin: EdgeInsets.symmetric(
+                vertical: 15
+            ),
+            decoration: BoxDecoration(
+                color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Время тренировки',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 175, 175, 175)
+                            )
+                          ),
+                          Text(
+                            '00:00:12',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18
+                            )
+                          )
+                        ]
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            'Общее время',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 175, 175, 175)
+                            )
+                          ),
+                          Text(
+                            '00:00:12',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18
+                            )
+                          )
+                        ]
+                      )
+                    ]
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Калории\nтренировки(ккал)',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 175, 175, 175)
+                            )
+                          ),
+                          Text(
+                            '2',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18
+                            )
+                          )
+                        ]
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            'Всего калорий(ккал)',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 175, 175, 175)
+                            )
+                          ),
+                          Text(
+                              '2',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18
+                              )
+                          )
+                        ]
+                      )
+                    ]
+                  )
+                ]
+            )
+          ),
+          Container(
+            width: 1000,
+            padding: EdgeInsets.all(
+              15
+            ),
+            margin: EdgeInsets.symmetric(
+              vertical: 15
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.linked_camera_outlined
+                ),
+                Container(
+                  margin: EdgeInsets.only(
+                    left: 15
+                  ),
+                  child: TextButton(
+                    child: Text(
+                      'Изображения',
+                      style: TextStyle(
+                          fontSize: 18,
+                          color: Color.fromARGB(255, 175, 175, 175)
+                      )
+                    ),
+                    onPressed: () {
+                      attachImages(context);
+                    }
+                  )
+                )
+              ]
+            )
+          ),
+          Container(
+            width: 1000,
+            padding: EdgeInsets.all(
+              15
+            ),
+            margin: EdgeInsets.symmetric(
+              vertical: 15
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.note_outlined
+                ),
+                Container(
+                  margin: EdgeInsets.only(
+                  left: 15
+                ),
+                child: Text(
+                  'Заметки',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Color.fromARGB(255, 175, 175, 175)
+                  )
+                )
+              )
+            ]
+          )
+        )
+        ]
+      )
+    );
+  }
+
+}
+
+class EditMyPageActivity extends StatefulWidget {
+
+  const EditMyPageActivity({Key? key}) : super(key: key);
+
+  @override
+  State<EditMyPageActivity> createState() => _EditMyPageActivityState();
+
+}
+
+class _EditMyPageActivityState extends State<EditMyPageActivity> {
+
+  late DatabaseHandler handler;
+  String nickName = '';
+  String activityLevel = 'Сидячий образ жизни';
+  String activityLevelDesc = 'Обычные ежедневные нагрузки';
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
+              Image.asset(
+                'assets/images/user_logo.png',
+                width: 1000,
+                height: 250
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Image.asset(
+                    'assets/images/user_logo.png',
+                    width: 50,
+                    height: 50,
+                  ),
+                  Image.asset(
+                    'assets/images/user_logo.png',
+                    width: 50,
+                    height: 50,
+                  ),
+                  Image.asset(
+                    'assets/images/user_logo.png',
+                    width: 50,
+                    height: 50,
+                  ),
+                  Image.asset(
+                    'assets/images/user_logo.png',
+                    width: 50,
+                    height: 50,
+                  ),
+                  Image.asset(
+                    'assets/images/user_logo.png',
+                    width: 50,
+                    height: 50,
+                  ),
+                ]
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  TextButton(
+                    child: Text(
+                      'Галлерея'
+                    ),
+                    onPressed: () {
+
+                    },
+                    style: ButtonStyle(
+                      foregroundColor: MaterialStateProperty.all(
+                        Color.fromARGB(255, 0, 0, 0)
+                      ),
+                      backgroundColor: MaterialStateProperty.all(
+                        Color.fromARGB(255, 200, 200, 200)
+                      ),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100.0)
+                        )
+                      ),
+                      fixedSize: MaterialStateProperty.all<Size>(
+                        Size(
+                          125.0,
+                          45.0
+                        )
+                      )
+                    )
+                  ),
+                  TextButton(
+                    child: Text(
+                      'Камера'
+                    ),
+                    onPressed: () {
+
+                    },
+                    style: ButtonStyle(
+                      foregroundColor: MaterialStateProperty.all(
+                        Color.fromARGB(255, 0, 0, 0)
+                      ),
+                      backgroundColor: MaterialStateProperty.all(
+                        Color.fromARGB(255, 200, 200, 200)
+                      ),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100.0)
+                        )
+                      ),
+                      fixedSize: MaterialStateProperty.all<Size>(
+                        Size(
+                          125.0,
+                          45.0
+                        )
+                      )
+                    )
+                  ),
+                ]
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Псевдоним',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold
+                      )
+                    ),
+                    TextField(
+                      decoration: new InputDecoration.collapsed(
+                        hintText: '',
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            width: 1.0
+                          )
+                        )
+                      ),
+                      // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                      onChanged: (value) {
+                        setState(() {
+                          nickName = value;
+                        });
+                      }
+                    )
+                  ]
+                )
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.account_circle
+                        ),
+                        Container(
+                          child: Text(
+                            'Пол'
+                          ),
+                          margin: EdgeInsets.only(
+                              left: 15
+                          )
+                        )
+                      ]
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.people
+                        ),
+                        Container(
+                          child: Text(
+                            'Рост'
+                          ),
+                          margin: EdgeInsets.only(
+                            left: 15
+                          )
+                        )
+                      ]
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.home
+                        ),
+                        Container(
+                          child: Text(
+                            '70 кг',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 200, 0)
+                            )
+                          ),
+                          margin: EdgeInsets.only(
+                            left: 15
+                          )
+                        )
+                      ]
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.cake
+                        ),
+                        Container(
+                          child: Text(
+                            '22 нояб. 2000 г'
+                          ),
+                          margin: EdgeInsets.only(
+                            left: 15
+                          )
+                        )
+                      ]
+                    ),
+                  ]
+                )
+              ),
+              Text(
+                'Данные про пол, рост, вес и дату рождения\nиспользуются для расчета количества сожженных\n каллорий, оптимального потребления каллорий и\nдиапазона частоты пульса во время тренировки.\nВы можете не предоставлять эту информацию, но в этом случае рекомендации по здоровью будут менее\nточными.'
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      margin: EdgeInsets.symmetric(
+                        vertical: 15
+                      ),
+                      child: Text(
+                        'Уровень активности',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        )
+                      )
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            GestureDetector(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: activityLevel == 'Сидячий образ жизни' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
+                                  borderRadius: BorderRadius.circular(100.0)
+                                ),
+                                width: 50,
+                                height: 50,
+                                child: Icon(
+                                  Icons.directions_walk,
+                                  color: Color.fromARGB(255, 255, 255, 255)
+                                )
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  activityLevel = 'Сидячий образ жизни';
+                                  activityLevelDesc = 'Обычные ежедневные нагрузки';
+                                });
+                              }
+                            ),
+                            Text(
+                              '1',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            GestureDetector(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: activityLevel == 'Несущественная активность' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
+                                  borderRadius: BorderRadius.circular(100.0)
+                                ),
+                                width: 50,
+                                height: 50,
+                                child: Icon(
+                                  Icons.directions_walk,
+                                  color: Color.fromARGB(255, 255, 255, 255)
+                                )
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  activityLevel = 'Несущественная активность';
+                                  activityLevelDesc = 'Обычные ежедневные нагрузки и 30-60 мин.\nумеренных ежедневных нагрузок(например ходьба\nсо скоростью 5-7 км/ч)';
+                                });
+                              }
+                            ),
+                            Text(
+                                '2',
+                                textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            GestureDetector(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: activityLevel == 'Активный' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
+                                  borderRadius: BorderRadius.circular(100.0)
+                                ),
+                                width: 50,
+                                height: 50,
+                                child: Icon(
+                                  Icons.directions_walk,
+                                  color: Color.fromARGB(255, 255, 255, 255)
+                                )
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  activityLevel = 'Активный';
+                                  activityLevelDesc = 'Обычные ежедневные нагрузки и не менее 60 мин.\nумеренных ежедневных нагрузок';
+                                });
+                              }
+                            ),
+                            Text(
+                                '3',
+                                textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            GestureDetector(
+                              child:
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: activityLevel == 'Большая активность' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
+                                    borderRadius: BorderRadius.circular(100.0)
+                                  ),
+                                  width: 50,
+                                  height: 50,
+                                  child: Icon(
+                                    Icons.directions_run,
+                                    color: Color.fromARGB(255, 255, 255, 255)
+                                  )
+                                ),
+                                onTap: () {
+                                  setState(() {
+                                    activityLevel = 'Большая активность';
+                                    activityLevelDesc = 'Обычные ежедневные нагрузки, а также не менее\n60 мин. умеренных ежедневных нагрузок и 60 мин.\nинтенсивных нагрузок. Вместо этого вы можете добавить к ыежедневным нагрузкам  120 мин.\nумеренных нагрузок.';
+                                  });
+                                }
+                              ),
+                            Text(
+                              '4',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                      ]
+                    ),
+                    Text(
+                      activityLevel,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold
+                      )
+                    ),
+                    Text(
+                      activityLevelDesc,
+                      textAlign: TextAlign.center
+                    )
+                  ]
+                )
+              )
+            ]
+          )
+        )
+      ),
+      persistentFooterButtons: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            TextButton(
+              child: Text(
+                'Отмена'
+              ),
+              onPressed: () {
+
+              }
+            ),
+            TextButton(
+              child: Text(
+                'Сохранить'
+              ),
+              onPressed: () {
+
+              }
+            )
+          ]
+        )
+      ],
     );
   }
 
