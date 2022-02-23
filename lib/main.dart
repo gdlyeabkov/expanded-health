@@ -13,14 +13,18 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 /*
 камера требует более высокий minSdkVersion
-import 'package:camera/camera.dart';
 */
+import 'package:camera/camera.dart';
+import 'package:path_provider/path_provider.dart';
 /*
 не работает account-manager-plugin
 import 'package:account_manager_plugin/account_manager_plugin.dart';
 */
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as latLng;
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:mobile_number/mobile_number.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'db.dart';
 import 'models.dart';
@@ -101,6 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String _status = '?', _steps = '?';
   */
   String _steps = '0';
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
   void addGlass() {
     setState(() {
@@ -229,7 +234,97 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.pushNamed(context, '/sleep/record');
   }
 
+  Future<void> initMobileNumberState() async {
+    if (!await MobileNumber.hasPhonePermission) {
+      await MobileNumber.requestPhonePermission;
+      return;
+    }
+    String mobileNumber = '';
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      mobileNumber = (await MobileNumber.mobileNumber)!;
+      List<SimCard> _simCard = (await MobileNumber.getSimCards)!;
+      print('mobileNumber: ${mobileNumber}');
+      print('_simCard: ${_simCard.length}');
+    } on PlatformException catch (e) {
+      debugPrint("Failed to get mobile number because of '${e.message}'");
+    }
+  }
 
+  void onSelectNotification(String? notification) async {
+    print('${notification}');
+  }
+  
+  void onDidReceiveLocalNotification(
+    int id, String? title, String? body, String? payload) async {
+    // display a dialog with the notification details, tap ok to go to another page
+    print('notification info: ${id}, ${title}, ${body}, ${payload}');
+    /*showDialog(
+      context: context,
+      builder: (BuildContext context) => CupertinoAlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: Text('Ok'),
+            onPressed: () async {
+              Navigator.of(context, rootNavigator: true).pop();
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SecondScreen(payload),
+                ),
+              );
+            },
+          )
+        ],
+      ),
+    );*/
+  }
+
+  initializeNotifications() async {
+    // setState(() async {
+      flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+      const AndroidInitializationSettings initializationSettingsAndroid =
+      // AndroidInitializationSettings('launch_background');
+      AndroidInitializationSettings('steps_logo');
+      final IOSInitializationSettings initializationSettingsIOS =
+      IOSInitializationSettings(
+        requestSoundPermission: false,
+        requestBadgePermission: false,
+        requestAlertPermission: false,
+        onDidReceiveLocalNotification: onDidReceiveLocalNotification,
+      );
+      final MacOSInitializationSettings initializationSettingsMacOS =
+      MacOSInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false);
+      final InitializationSettings initializationSettings = InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+          macOS: initializationSettingsMacOS);
+      await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+          onSelectNotification: onSelectNotification);
+      await showStepsNotification();
+    // });
+  }
+
+  showStepsNotification() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails('0', 'softtrack-health-notifications-channel',
+        channelDescription: 'softtrack-health-notifications-channel-desc',
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: 'ticker'
+    );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+        0, '0 шагов', 'Нет данных о шагах за сегодня.', platformChannelSpecifics,
+        payload: 'item x'
+    );
+  }
 
   @override
   initState() {
@@ -252,6 +347,18 @@ class _MyHomePageState extends State<MyHomePage> {
       print('${value.length}');
     });
     */
+    /*getPhoneNumber().then((value) {
+      print('phone number: ${value}');
+    });*/
+    MobileNumber.listenPhonePermission((isPermissionGranted) {
+      if (isPermissionGranted) {
+        initMobileNumberState();
+      } else {}
+    });
+
+    initMobileNumberState();
+    initializeNotifications();
+    // showStepsNotification();
   }
 
   @override
@@ -6787,110 +6894,232 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
           ),
           Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Column(
-                    children: [
-                      Text(
-                        'Длительность',
-                        textAlign: TextAlign.center
-                      ),
-                      Text(
-                        startTimerTitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold
-                        )
-                      ),
-                    ]
-                  ),
-                  Column(
-                    children: [
-                      Text(
-                          'Скорость',
-                          textAlign: TextAlign.center
-                      ),
-                      Text(
+              Container(
+                height: 100,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
+                          ),
+                          child: Text(
+                            'Длительность',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: (
+                                isStarted ?
+                                  Color.fromARGB(255, 0, 0, 0)
+                                :
+                                  Color.fromARGB(255, 175, 175, 175)
+                              )
+                            )
+                          )
+                        ),
+                        Text(
+                          startTimerTitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: (
+                              isStarted ?
+                              Color.fromARGB(255, 0, 0, 0)
+                                  :
+                              Color.fromARGB(255, 175, 175, 175)
+                            )
+                          )
+                        ),
+                      ]
+                    ),
+                    Column(
+                      children: [
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
+                          ),
+                          child: Text(
+                            'Скорость',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: (
+                                isStarted ?
+                                Color.fromARGB(255, 0, 0, 0)
+                                    :
+                                Color.fromARGB(255, 175, 175, 175)
+                              )
+                            )
+                          )
+                        ),
+                        Text(
                           '00:00:00',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                              fontWeight: FontWeight.bold
+                            fontWeight: FontWeight.bold,
+                            color: (
+                              isStarted ?
+                              Color.fromARGB(255, 0, 0, 0)
+                                  :
+                              Color.fromARGB(255, 175, 175, 175)
+                            )
                           )
-                      ),
-                    ]
-                  )
-                ]
+                        ),
+                      ]
+                    )
+                  ]
+                )
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Column(
+              Container(
+                height: 100,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
                       children: [
-                        Text(
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
+                          ),
+                          child: Text(
                             'Темп',
-                            textAlign: TextAlign.center
-                        ),
-                        Text(
-                            '00:00:00',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                fontWeight: FontWeight.bold
+                              color: (
+                                isStarted ?
+                                Color.fromARGB(255, 0, 0, 0)
+                                    :
+                                Color.fromARGB(255, 175, 175, 175)
+                              )
                             )
+                          )
+                        ),
+                        Text(
+                          '00:00:00',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: (
+                              isStarted ?
+                              Color.fromARGB(255, 0, 0, 0)
+                                  :
+                              Color.fromARGB(255, 175, 175, 175)
+                            )
+                          )
                         ),
                       ]
-                  ),
-                  Column(
+                    ),
+                    Column(
                       children: [
-                        Text(
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
+                          ),
+                          child: Text(
                             'Подъем',
-                            textAlign: TextAlign.center
-                        ),
-                        Text(
-                            '00:00:00',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                fontWeight: FontWeight.bold
+                              color: (
+                                isStarted ?
+                                Color.fromARGB(255, 0, 0, 0)
+                                    :
+                                Color.fromARGB(255, 175, 175, 175)
+                              )
                             )
+                          )
+                        ),
+                        Text(
+                          '00:00:00',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: (
+                              isStarted ?
+                              Color.fromARGB(255, 0, 0, 0)
+                                  :
+                              Color.fromARGB(255, 175, 175, 175)
+                            )
+                          )
                         ),
                       ]
-                  )
-                ]
+                    )
+                  ]
+                )
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Column(
+              Container(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
                       children: [
-                        Text(
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
+                          ),
+                          child: Text(
                             'Калории',
-                            textAlign: TextAlign.center
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: (
+                                isStarted ?
+                                Color.fromARGB(255, 0, 0, 0)
+                                    :
+                                Color.fromARGB(255, 175, 175, 175)
+                              )
+                            )
+                          )
                         ),
                         Text(
                             '00:00:00',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                fontWeight: FontWeight.bold
+                              fontWeight: FontWeight.bold,
+                              color: (
+                                isStarted ?
+                                Color.fromARGB(255, 0, 0, 0)
+                                    :
+                                Color.fromARGB(255, 175, 175, 175)
+                              )
                             )
                         ),
                       ]
-                  ),
-                  Column(
+                    ),
+                    Column(
                       children: [
-                        Text(
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
+                          ),
+                          child: Text(
                             'Расстояние',
-                            textAlign: TextAlign.center
-                        ),
-                        Text(
-                            '00:00:00',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                fontWeight: FontWeight.bold
+                              color: (
+                                isStarted ?
+                                Color.fromARGB(255, 0, 0, 0)
+                                    :
+                                Color.fromARGB(255, 175, 175, 175)
+                              )
                             )
+                          )
+                        ),
+                        Text(
+                          '00:00:00',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: (
+                              isStarted ?
+                                Color.fromARGB(255, 0, 0, 0)
+                              :
+                                Color.fromARGB(255, 175, 175, 175)
+                            )
+                          )
                         ),
                       ]
-                  )
-                ]
+                    )
+                  ]
+                )
               )
             ]
           )
@@ -7002,14 +7231,16 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
                 child: Text(
                   'Сделать снимок'
                 ),
-                onPressed: () {
+                onPressed: () async {
                   /*
                   камера требует более высокий minSdkVersion
+                  */
+                  cameras = await availableCameras();
                   final firstCamera = cameras.first;
                   setState((){
                     isTakePhoto = true;
                   });
-                  */
+
                 }
               )
             ]
@@ -7020,7 +7251,7 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
   }
 
   @override
-  initState() async {
+  initState() {
     super.initState();
     this.handler = DatabaseHandler();
     this.handler.initializeDB().whenComplete(() async {
@@ -7296,6 +7527,74 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
   String nickName = '';
   String activityLevel = 'Сидячий образ жизни';
   String activityLevelDesc = 'Обычные ежедневные нагрузки';
+  ImagePicker _picker = ImagePicker();
+  late XFile? _image;
+  var cameras;
+  bool isTakePhoto = false;
+  CameraController? cameraController = null;
+  late int selectedCameraIdx;
+  late String imagePath;
+
+  Future getImage() async {
+    var image = await _picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      _image = image;
+    });
+  }
+
+  Future _initCameraController(CameraDescription cameraDescription) async {
+    if (cameraController != null) {
+      await cameraController?.dispose();
+    }
+
+    // 3
+    cameraController = CameraController(cameraDescription, ResolutionPreset.high);
+
+    // If the controller is updated then update the UI.
+    // 4
+    cameraController?.addListener(() {
+      // 5
+      if (mounted) {
+        setState(() {});
+      }
+
+      if (cameraController!.value.hasError) {
+        print('Camera error ${cameraController?.value.errorDescription}');
+      }
+    });
+
+    // 6
+    try {
+      await cameraController?.initialize();
+    } on CameraException catch (e) {
+      print('camera exception: ${e}');
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _onCapturePressed(context) async {
+    try {
+      // 1
+      final path = join(
+        (await getTemporaryDirectory()).path,
+        '${DateTime.now()}.png',
+      );
+      // 2
+      await cameraController?.takePicture();
+      // 3
+      /*Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PreviewImageScreen(imagePath: path),
+        ),
+      );*/
+    } catch (e) {
+      print(e);
+    }
+  }
 
   @override
   initState() {
@@ -7306,388 +7605,420 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
 
       });
     });
+    _picker = ImagePicker();
+    availableCameras().then((availableCameras) {
+
+      cameras = availableCameras;
+      if (cameras.length > 0) {
+        setState(() {
+          // 2
+          selectedCameraIdx = 0;
+        });
+
+        _initCameraController(cameras[selectedCameraIdx]).then((void v) {});
+      } else {
+        print("No camera available");
+      }
+    }).catchError((err) {
+      // 3
+      print('Error: $err.code\nError Message: $err.message');
+    });
+
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 225, 225, 225),
-      body: SingleChildScrollView(
-        child: Container(
-          child: Column(
-            children: [
-              Image.asset(
-                'assets/images/user_logo.png',
-                width: 1000,
-                height: 250
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Image.asset(
-                    'assets/images/user_logo.png',
-                    width: 50,
-                    height: 50,
-                  ),
-                  Image.asset(
-                    'assets/images/user_logo.png',
-                    width: 50,
-                    height: 50,
-                  ),
-                  Image.asset(
-                    'assets/images/user_logo.png',
-                    width: 50,
-                    height: 50,
-                  ),
-                  Image.asset(
-                    'assets/images/user_logo.png',
-                    width: 50,
-                    height: 50,
-                  ),
-                  Image.asset(
-                    'assets/images/user_logo.png',
-                    width: 50,
-                    height: 50,
-                  ),
-                ]
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  TextButton(
-                    child: Text(
-                      'Галлерея'
-                    ),
-                    onPressed: () {
-
-                    },
-                    style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all(
-                        Color.fromARGB(255, 0, 0, 0)
-                      ),
-                      backgroundColor: MaterialStateProperty.all(
-                        Color.fromARGB(255, 200, 200, 200)
-                      ),
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100.0)
-                        )
-                      ),
-                      fixedSize: MaterialStateProperty.all<Size>(
-                        Size(
-                          125.0,
-                          45.0
-                        )
-                      )
-                    )
-                  ),
-                  TextButton(
-                    child: Text(
-                      'Камера'
-                    ),
-                    onPressed: () {
-
-                    },
-                    style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all(
-                        Color.fromARGB(255, 0, 0, 0)
-                      ),
-                      backgroundColor: MaterialStateProperty.all(
-                        Color.fromARGB(255, 200, 200, 200)
-                      ),
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100.0)
-                        )
-                      ),
-                      fixedSize: MaterialStateProperty.all<Size>(
-                        Size(
-                          125.0,
-                          45.0
-                        )
-                      )
-                    )
-                  ),
-                ]
-              ),
-              Container(
-                padding: EdgeInsets.all(
-                  15
-                ),
-                margin: EdgeInsets.symmetric(
-                  vertical: 15
-                ),
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 255, 255, 255)
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Псевдоним',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold
-                      )
-                    ),
-                    TextField(
-                      decoration: new InputDecoration.collapsed(
-                        hintText: '',
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            width: 1.0
-                          )
-                        )
-                      ),
-                      // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
-                      onChanged: (value) {
-                        setState(() {
-                          nickName = value;
-                        });
-                      }
-                    )
-                  ]
-                )
-              ),
-              Container(
-                padding: EdgeInsets.all(
-                  15
-                ),
-                margin: EdgeInsets.symmetric(
-                  vertical: 15
-                ),
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 255, 255, 255)
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.account_circle
-                        ),
-                        Container(
-                          child: Text(
-                            'Пол'
-                          ),
-                          margin: EdgeInsets.only(
-                              left: 15
-                          )
-                        )
-                      ]
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.people
-                        ),
-                        Container(
-                          child: Text(
-                            'Рост'
-                          ),
-                          margin: EdgeInsets.only(
-                            left: 15
-                          )
-                        )
-                      ]
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.home
-                        ),
-                        Container(
-                          child: Text(
-                            '70 кг',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 200, 0)
-                            )
-                          ),
-                          margin: EdgeInsets.only(
-                            left: 15
-                          )
-                        )
-                      ]
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.cake
-                        ),
-                        Container(
-                          child: Text(
-                            '22 нояб. 2000 г'
-                          ),
-                          margin: EdgeInsets.only(
-                            left: 15
-                          )
-                        )
-                      ]
-                    ),
-                  ]
-                )
-              ),
-              Text(
-                'Данные про пол, рост, вес и дату рождения\nиспользуются для расчета количества сожженных\n каллорий, оптимального потребления каллорий и\nдиапазона частоты пульса во время тренировки.\nВы можете не предоставлять эту информацию, но в этом случае рекомендации по здоровью будут менее\nточными.'
-              ),
-              Container(
-                padding: EdgeInsets.all(
-                  15
-                ),
-                margin: EdgeInsets.symmetric(
-                  vertical: 15
-                ),
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 255, 255, 255)
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      margin: EdgeInsets.symmetric(
-                        vertical: 15
-                      ),
-                      child: Text(
-                        'Уровень активности',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        )
-                      )
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Column(
-                          children: [
-                            GestureDetector(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: activityLevel == 'Сидячий образ жизни' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
-                                  borderRadius: BorderRadius.circular(100.0)
-                                ),
-                                width: 50,
-                                height: 50,
-                                child: Icon(
-                                  Icons.directions_walk,
-                                  color: Color.fromARGB(255, 255, 255, 255)
-                                )
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  activityLevel = 'Сидячий образ жизни';
-                                  activityLevelDesc = 'Обычные ежедневные нагрузки';
-                                });
-                              }
-                            ),
-                            Text(
-                              '1',
-                              textAlign: TextAlign.center
-                            )
-                          ]
-                        ),
-                        Column(
-                          children: [
-                            GestureDetector(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: activityLevel == 'Несущественная активность' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
-                                  borderRadius: BorderRadius.circular(100.0)
-                                ),
-                                width: 50,
-                                height: 50,
-                                child: Icon(
-                                  Icons.directions_walk,
-                                  color: Color.fromARGB(255, 255, 255, 255)
-                                )
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  activityLevel = 'Несущественная активность';
-                                  activityLevelDesc = 'Обычные ежедневные нагрузки и 30-60 мин.\nумеренных ежедневных нагрузок(например ходьба\nсо скоростью 5-7 км/ч)';
-                                });
-                              }
-                            ),
-                            Text(
-                                '2',
-                                textAlign: TextAlign.center
-                            )
-                          ]
-                        ),
-                        Column(
-                          children: [
-                            GestureDetector(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: activityLevel == 'Активный' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
-                                  borderRadius: BorderRadius.circular(100.0)
-                                ),
-                                width: 50,
-                                height: 50,
-                                child: Icon(
-                                  Icons.directions_walk,
-                                  color: Color.fromARGB(255, 255, 255, 255)
-                                )
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  activityLevel = 'Активный';
-                                  activityLevelDesc = 'Обычные ежедневные нагрузки и не менее 60 мин.\nумеренных ежедневных нагрузок';
-                                });
-                              }
-                            ),
-                            Text(
-                                '3',
-                                textAlign: TextAlign.center
-                            )
-                          ]
-                        ),
-                        Column(
-                          children: [
-                            GestureDetector(
-                              child:
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: activityLevel == 'Большая активность' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
-                                    borderRadius: BorderRadius.circular(100.0)
-                                  ),
-                                  width: 50,
-                                  height: 50,
-                                  child: Icon(
-                                    Icons.directions_run,
-                                    color: Color.fromARGB(255, 255, 255, 255)
-                                  )
-                                ),
-                                onTap: () {
-                                  setState(() {
-                                    activityLevel = 'Большая активность';
-                                    activityLevelDesc = 'Обычные ежедневные нагрузки, а также не менее\n60 мин. умеренных ежедневных нагрузок и 60 мин.\nинтенсивных нагрузок. Вместо этого вы можете добавить к ыежедневным нагрузкам  120 мин.\nумеренных нагрузок.';
-                                  });
-                                }
-                              ),
-                            Text(
-                              '4',
-                              textAlign: TextAlign.center
-                            )
-                          ]
-                        ),
-                      ]
-                    ),
-                    Text(
-                      activityLevel,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold
-                      )
-                    ),
-                    Text(
-                      activityLevelDesc,
-                      textAlign: TextAlign.center
-                    )
-                  ]
-                )
-              )
-            ]
+      body: (
+        isTakePhoto ?
+          AspectRatio(
+            aspectRatio: cameraController!.value.aspectRatio,
+            child: CameraPreview(
+              cameraController!
+            )
           )
-        )
+        :
+          SingleChildScrollView(
+            child: Container(
+              child: Column(
+                children: [
+                  Image.asset(
+                    'assets/images/user_logo.png',
+                    width: 1000,
+                    height: 250
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Image.asset(
+                        'assets/images/user_logo.png',
+                        width: 50,
+                        height: 50,
+                      ),
+                      Image.asset(
+                        'assets/images/user_logo.png',
+                        width: 50,
+                        height: 50,
+                      ),
+                      Image.asset(
+                        'assets/images/user_logo.png',
+                        width: 50,
+                        height: 50,
+                      ),
+                      Image.asset(
+                        'assets/images/user_logo.png',
+                        width: 50,
+                        height: 50,
+                      ),
+                      Image.asset(
+                        'assets/images/user_logo.png',
+                        width: 50,
+                        height: 50,
+                      ),
+                    ]
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      TextButton(
+                        child: Text(
+                          'Галлерея'
+                        ),
+                        onPressed: () {
+                          getImage();
+                        },
+                        style: ButtonStyle(
+                          foregroundColor: MaterialStateProperty.all(
+                            Color.fromARGB(255, 0, 0, 0)
+                          ),
+                          backgroundColor: MaterialStateProperty.all(
+                            Color.fromARGB(255, 200, 200, 200)
+                          ),
+                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100.0)
+                            )
+                          ),
+                          fixedSize: MaterialStateProperty.all<Size>(
+                            Size(
+                              125.0,
+                              45.0
+                            )
+                          )
+                        )
+                      ),
+                      TextButton(
+                        child: Text(
+                          'Камера'
+                        ),
+                        onPressed: () {
+                          // _onCapturePressed(context);
+                          setState(() {
+                            isTakePhoto = true;
+                          });
+                        },
+                        style: ButtonStyle(
+                          foregroundColor: MaterialStateProperty.all(
+                            Color.fromARGB(255, 0, 0, 0)
+                          ),
+                          backgroundColor: MaterialStateProperty.all(
+                            Color.fromARGB(255, 200, 200, 200)
+                          ),
+                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100.0)
+                            )
+                          ),
+                          fixedSize: MaterialStateProperty.all<Size>(
+                            Size(
+                              125.0,
+                              45.0
+                            )
+                          )
+                        )
+                      ),
+                    ]
+                  ),
+                  Container(
+                    padding: EdgeInsets.all(
+                      15
+                    ),
+                    margin: EdgeInsets.symmetric(
+                      vertical: 15
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Псевдоним',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold
+                          )
+                        ),
+                        TextField(
+                          decoration: new InputDecoration.collapsed(
+                            hintText: '',
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                width: 1.0
+                              )
+                            )
+                          ),
+                          // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                          onChanged: (value) {
+                            setState(() {
+                              nickName = value;
+                            });
+                          }
+                        )
+                      ]
+                    )
+                  ),
+                  Container(
+                    padding: EdgeInsets.all(
+                      15
+                    ),
+                    margin: EdgeInsets.symmetric(
+                      vertical: 15
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.account_circle
+                            ),
+                            Container(
+                              child: Text(
+                                'Пол'
+                              ),
+                              margin: EdgeInsets.only(
+                                  left: 15
+                              )
+                            )
+                          ]
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.people
+                            ),
+                            Container(
+                              child: Text(
+                                'Рост'
+                              ),
+                              margin: EdgeInsets.only(
+                                left: 15
+                              )
+                            )
+                          ]
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.home
+                            ),
+                            Container(
+                              child: Text(
+                                '70 кг',
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 0, 200, 0)
+                                )
+                              ),
+                              margin: EdgeInsets.only(
+                                left: 15
+                              )
+                            )
+                          ]
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.cake
+                            ),
+                            Container(
+                              child: Text(
+                                '22 нояб. 2000 г'
+                              ),
+                              margin: EdgeInsets.only(
+                                left: 15
+                              )
+                            )
+                          ]
+                        ),
+                      ]
+                    )
+                  ),
+                  Text(
+                    'Данные про пол, рост, вес и дату рождения\nиспользуются для расчета количества сожженных\n каллорий, оптимального потребления каллорий и\nдиапазона частоты пульса во время тренировки.\nВы можете не предоставлять эту информацию, но в этом случае рекомендации по здоровью будут менее\nточными.'
+                  ),
+                  Container(
+                    padding: EdgeInsets.all(
+                      15
+                    ),
+                    margin: EdgeInsets.symmetric(
+                      vertical: 15
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          margin: EdgeInsets.symmetric(
+                            vertical: 15
+                          ),
+                          child: Text(
+                            'Уровень активности',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            )
+                          )
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Column(
+                              children: [
+                                GestureDetector(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: activityLevel == 'Сидячий образ жизни' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
+                                      borderRadius: BorderRadius.circular(100.0)
+                                    ),
+                                    width: 50,
+                                    height: 50,
+                                    child: Icon(
+                                      Icons.directions_walk,
+                                      color: Color.fromARGB(255, 255, 255, 255)
+                                    )
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      activityLevel = 'Сидячий образ жизни';
+                                      activityLevelDesc = 'Обычные ежедневные нагрузки';
+                                    });
+                                  }
+                                ),
+                                Text(
+                                  '1',
+                                  textAlign: TextAlign.center
+                                )
+                              ]
+                            ),
+                            Column(
+                              children: [
+                                GestureDetector(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: activityLevel == 'Несущественная активность' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
+                                      borderRadius: BorderRadius.circular(100.0)
+                                    ),
+                                    width: 50,
+                                    height: 50,
+                                    child: Icon(
+                                      Icons.directions_walk,
+                                      color: Color.fromARGB(255, 255, 255, 255)
+                                    )
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      activityLevel = 'Несущественная активность';
+                                      activityLevelDesc = 'Обычные ежедневные нагрузки и 30-60 мин.\nумеренных ежедневных нагрузок(например ходьба\nсо скоростью 5-7 км/ч)';
+                                    });
+                                  }
+                                ),
+                                Text(
+                                    '2',
+                                    textAlign: TextAlign.center
+                                )
+                              ]
+                            ),
+                            Column(
+                              children: [
+                                GestureDetector(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: activityLevel == 'Активный' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
+                                      borderRadius: BorderRadius.circular(100.0)
+                                    ),
+                                    width: 50,
+                                    height: 50,
+                                    child: Icon(
+                                      Icons.directions_walk,
+                                      color: Color.fromARGB(255, 255, 255, 255)
+                                    )
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      activityLevel = 'Активный';
+                                      activityLevelDesc = 'Обычные ежедневные нагрузки и не менее 60 мин.\nумеренных ежедневных нагрузок';
+                                    });
+                                  }
+                                ),
+                                Text(
+                                    '3',
+                                    textAlign: TextAlign.center
+                                )
+                              ]
+                            ),
+                            Column(
+                              children: [
+                                GestureDetector(
+                                  child:
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: activityLevel == 'Большая активность' ? Color.fromARGB(255, 0, 200, 0) : Color.fromARGB(255, 225, 225, 225),
+                                        borderRadius: BorderRadius.circular(100.0)
+                                      ),
+                                      width: 50,
+                                      height: 50,
+                                      child: Icon(
+                                        Icons.directions_run,
+                                        color: Color.fromARGB(255, 255, 255, 255)
+                                      )
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        activityLevel = 'Большая активность';
+                                        activityLevelDesc = 'Обычные ежедневные нагрузки, а также не менее\n60 мин. умеренных ежедневных нагрузок и 60 мин.\nинтенсивных нагрузок. Вместо этого вы можете добавить к ыежедневным нагрузкам  120 мин.\nумеренных нагрузок.';
+                                      });
+                                    }
+                                  ),
+                                Text(
+                                  '4',
+                                  textAlign: TextAlign.center
+                                )
+                              ]
+                            ),
+                          ]
+                        ),
+                        Text(
+                          activityLevel,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold
+                          )
+                        ),
+                        Text(
+                          activityLevelDesc,
+                          textAlign: TextAlign.center
+                        )
+                      ]
+                    )
+                  )
+                ]
+              )
+            )
+          )
       ),
       persistentFooterButtons: [
         Row(
@@ -7698,7 +8029,13 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
                 'Отмена'
               ),
               onPressed: () {
-
+                setState(() {
+                  bool isNotTakePhoto = !isTakePhoto;
+                  if (isNotTakePhoto) {
+                    Navigator.pushNamed(context, '/main');
+                  }
+                  isTakePhoto = false;
+                });
               }
             ),
             TextButton(
