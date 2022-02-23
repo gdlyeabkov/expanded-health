@@ -63,6 +63,7 @@ class MyApp extends StatelessWidget {
         '/food': (context) => const FoodActivity(),
         '/sleep/record': (context) => const RecordSleepActivity(),
         '/sleep': (context) => const SleepActivity(),
+        '/body/record': (context) => const RecordBodyActivity(),
         '/body': (context) => const BodyActivity(),
         '/water': (context) => const WaterActivity(),
         '/account/edit': (context) => const EditMyPageActivity()
@@ -111,6 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       removeGlassesBtnColor = enabledGlassesBtnColor;
       glassesCount++;
+      handler.updateWaterIndicators(glassesCount);
     });
   }
 
@@ -120,6 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (isGlassesCountNotEmpty) {
       setState(() {
         glassesCount--;
+        handler.updateWaterIndicators(glassesCount);
         isGlassesCountEmpty = glassesCount <= 0;
         if (isGlassesCountEmpty) {
           // делаем кнопку disabled
@@ -333,7 +336,13 @@ class _MyHomePageState extends State<MyHomePage> {
     this.handler = DatabaseHandler();
     this.handler.initializeDB().whenComplete(() async {
       setState(() {
-
+      });
+      this.handler.retrieveIndicators().then((indicators) {
+        if (indicators.length >= 1) {
+          Indicators indicatorsItem = indicators[0];
+          glassesCount = indicatorsItem.water;
+        }
+        print('glassesCount: ${glassesCount}');
       });
     });
     /*
@@ -1218,7 +1227,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/add_alarm');
+
                         },
                         child: Row(
                           children: [
@@ -3776,6 +3785,7 @@ class WaterActivity extends StatefulWidget {
 
 class _WaterActivityState extends State<WaterActivity> {
 
+  late DatabaseHandler handler;
   int glassesCount = 0;
   late Color removeGlassesBtnColor;
   Color disabledGlassesBtnColor = Color.fromARGB(127, 150, 150, 150);
@@ -3789,6 +3799,7 @@ class _WaterActivityState extends State<WaterActivity> {
     if (isGlassesCountNotEmpty) {
       setState(() {
         glassesCount--;
+        handler.updateWaterIndicators(glassesCount);
         isGlassesCountEmpty = glassesCount <= 0;
         if (isGlassesCountEmpty) {
           // делаем кнопку disabled
@@ -3802,6 +3813,7 @@ class _WaterActivityState extends State<WaterActivity> {
     setState(() {
       removeGlassesBtnColor = enabledGlassesBtnColor;
       glassesCount++;
+      handler.updateWaterIndicators(glassesCount);
     });
   }
 
@@ -3815,10 +3827,23 @@ class _WaterActivityState extends State<WaterActivity> {
   initState() {
     super.initState();
     removeGlassesBtnColor = enabledGlassesBtnColor;
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+      });
+      this.handler.retrieveIndicators().then((indicators) {
+        if (indicators.length >= 1) {
+          Indicators indicatorsItem = indicators[0];
+          glassesCount = indicatorsItem.water;
+        }
+        print('glassesCount: ${glassesCount}');
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -4205,7 +4230,8 @@ class _BodyActivityState extends State<BodyActivity> {
                   'Запись'
                 ),
                 onPressed: () {
-                  handler.addNewBodyRecord('', 0, 0, 0.0, '');
+                  // handler.addNewBodyRecord('', 0, 0, 0.0, '');
+                  Navigator.pushNamed(context, '/body/record');
                 }
               )
             ]
@@ -5715,7 +5741,14 @@ class _RecordFoodActivityState extends State<RecordFoodActivity> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, '/food/add');
+                      // Navigator.pushNamed(context, '/food/add');
+                      Navigator.pushNamed(
+                          context,
+                          '/food/add',
+                          arguments: {
+                            'foodType': foodType
+                          }
+                      );
                     },
                     child: Row(
                       children: [
@@ -5789,10 +5822,35 @@ class _AddFoodItemActivityState extends State<AddFoodItemActivity> {
   late DatabaseHandler handler;
   String foodItemName = '';
   int foodItemkKals = 0;
+  String foodType = '';
+  bool isAddNutrients = false;
+  int foodItemTotalCarbs = 0;
+  int foodItemTotalFats = 0;
+  int foodItemProtein = 0;
+  int foodItemSaturatedFats = 0;
+  int foodItemTransFats = 0;
+  int foodItemCholesterol = 0;
+  int foodItemSodium = 0;
+  int foodItemPotassium = 0;
+  int foodItemCellulose = 0;
+  int foodItemSugar = 0;
+  int foodItemA = 0;
+  int foodItemC = 0;
+  int foodItemCalcium = 0;
+  int foodItemIron = 0;
+  double foodItemPortions = 0.0;
+  String foodItemType = '';
 
   addFoodItem(BuildContext context) {
-    handler.addNewFoodItem(foodItemName, foodItemkKals, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '');
-    Navigator.pushNamed(context, '/food/record');
+    handler.addNewFoodItem(foodItemName, foodItemkKals, foodItemTotalCarbs, foodItemTotalFats, foodItemProtein, foodItemSaturatedFats, foodItemTransFats, foodItemCholesterol, foodItemSodium, foodItemPotassium, foodItemCellulose, foodItemSugar, foodItemA, foodItemC, foodItemCalcium, foodItemIron, foodItemPortions, foodType);
+    // Navigator.pushNamed(context, '/food/record');
+    Navigator.pushNamed(
+        context,
+        '/food/record',
+        arguments: {
+          'foodType': foodType
+        }
+    );
   }
 
   @override
@@ -5808,6 +5866,15 @@ class _AddFoodItemActivityState extends State<AddFoodItemActivity> {
 
   @override
   Widget build(BuildContext context) {
+
+    setState(() {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      if (arguments != null) {
+        print(arguments['foodType']);
+        foodType = arguments['foodType'];
+      }
+    });
+
     return (
       Scaffold(
         appBar: AppBar(
@@ -5877,30 +5944,558 @@ class _AddFoodItemActivityState extends State<AddFoodItemActivity> {
               margin: EdgeInsets.symmetric(
                 vertical: 25
               ),
-              child: TextButton(
-                style: ButtonStyle(
-                  foregroundColor: MaterialStateProperty.all<Color>(
-                    Color.fromARGB(255, 0, 0, 0)
-                  ),
-                  backgroundColor: MaterialStateProperty.all<Color>(
-                    Color.fromARGB(255, 175, 175, 175)
-                  ),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100.0),
-                      side: BorderSide(
-                        color: Color.fromARGB(255, 150, 150, 150)
+              child: (
+                isAddNutrients ?
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Всего углеводов'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemTotalCarbs = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                'г'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Всего жиров'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemTotalFats = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                'г'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Протеин'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemProtein = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                'г'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Насыщенные жиры'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemSaturatedFats = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                'г'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Трансжиры'
+                          ),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  margin: EdgeInsets.only(
+                                      left: 150
+                                  ),
+                                  width: 75,
+                                  child: TextField(
+                                    decoration: new InputDecoration.collapsed(
+                                      hintText: '',
+                                      border: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          width: 1.0
+                                        )
+                                      )
+                                    ),
+                                    // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                    onChanged: (value) {
+                                      setState(() {
+                                        foodItemTransFats = int.parse(value);
+                                      });
+                                    }
+                                  )
+                                ),
+                                Text(
+                                  'г'
+                                )
+                              ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Холестерин'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemCholesterol = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                'мг'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Натрий'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemSodium = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                'мг'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Калий'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemPotassium = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                'мг'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Клетчатка'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                      hintText: '',
+                                      border: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              width: 1.0
+                                          )
+                                      )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemCellulose = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                'г'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Сахар'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemSugar = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                'г'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Витамин A(100% = 900 мкг RAE)*'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 100
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemA = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                '%'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Витамин C (100% = 90мг)*'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemC = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                '%'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Кальций (100% = 1300мг)*'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemCalcium = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                '%'
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Железо (100% = 18мг)*'
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(
+                                  left: 150
+                                ),
+                                width: 75,
+                                child: TextField(
+                                  decoration: new InputDecoration.collapsed(
+                                    hintText: '',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        width: 1.0
+                                      )
+                                    )
+                                  ),
+                                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      foodItemIron = int.parse(value);
+                                    });
+                                  }
+                                )
+                              ),
+                              Text(
+                                '%'
+                              )
+                            ]
+                          )
+                        ]
                       )
+                    ]
+                  )
+                :
+                  TextButton(
+                    style: ButtonStyle(
+                      foregroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 0, 0, 0)
+                      ),
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 175, 175, 175)
+                      ),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100.0),
+                          side: BorderSide(
+                            color: Color.fromARGB(255, 150, 150, 150)
+                          )
+                        )
+                      )
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        isAddNutrients = true;
+                      });
+                    },
+                    child: Text(
+                      'Добав. питат. вещества',
+                      textAlign: TextAlign.center
                     )
                   )
-                ),
-                onPressed: () {
-
-                },
-                child: Text(
-                  'Добав. питат. вещества',
-                  textAlign: TextAlign.center
-                )
               )
             )
           ]
@@ -5919,7 +6514,14 @@ class _AddFoodItemActivityState extends State<AddFoodItemActivity> {
                   )
                 ),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/food/record');
+                  // Navigator.pushNamed(context, '/food/record');
+                  Navigator.pushNamed(
+                      context,
+                      '/food/record',
+                      arguments: {
+                        'foodType': foodType
+                      }
+                  );
                 }
               ),
               TextButton(
@@ -6205,101 +6807,121 @@ class _ExercisesListActivityState extends State<ExercisesListActivity> {
   List<Widget> exercises = [];
   List<bool> exercisesSelectors = [];
   bool isSelectionMode = false;
+  List<int> exercisesIds = [];
+  List<bool> exercisesFavorites = [];
 
-  void addExercise(BodyRecord record) {
+  void addExercise(Exercise record) {
+    int exerciseId = record.id!;
     int exerciseIndex = exercises.length;
     String exerciseName = 'Ходьба';
-    // exerciseName = record.name;
+    exerciseName = record.name;
     bool isFavoriteExercise = false;
-    // bool isFavoritedExercise = record.is_activated;
-    exercisesSelectors.add(false);
-    GestureDetector exercise = GestureDetector(
-      child: Container(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    isSelectionMode ?
-                      Checkbox(
-                        value: exercisesSelectors[exerciseIndex],
-                        onChanged: (value) {
-                          setState(() {
-                            exercisesSelectors[exerciseIndex] = !exercisesSelectors[exerciseIndex];
-                          });
-                        }
-                      )
-                    :
-                      Column()
-                  ]
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      // crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Container(
-                          margin: EdgeInsets.only(
+    int rawIsFavoritedExercise = record.is_favorite;
+    isFavoriteExercise = rawIsFavoritedExercise == 1;
+    bool isActivatedExercise = false;
+    int rawIsActivatedExercise = record.is_activated;
+    isActivatedExercise = rawIsActivatedExercise == 1;
+    if (isActivatedExercise) {
+      exercisesIds.add(exerciseId);
+      exercisesSelectors.add(false);
+      exercisesFavorites.add(isFavoriteExercise);
+      GestureDetector exercise = GestureDetector(
+        child: Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      isSelectionMode ?
+                        Checkbox(
+                          value: exercisesSelectors[exerciseIndex],
+                          onChanged: (value) {
+                            setState(() {
+                              exercisesSelectors[exerciseIndex] = !exercisesSelectors[exerciseIndex];
+                            });
+                          }
+                        )
+                      :
+                        Column()
+                    ]
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        // crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(
                               left: 15
-                          ),
-                          child: Icon(
+                            ),
+                            child: Icon(
                               Icons.directions_walk,
                               color: Color.fromARGB(255, 0, 200, 0)
-                          )
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(
-                            left: 10
+                            )
                           ),
-                          child: Text(
-                            exerciseName,
-                            style: TextStyle(
-                                fontSize: 20
+                          Container(
+                            margin: EdgeInsets.only(
+                              left: 10
+                            ),
+                            child: Text(
+                              exerciseName,
+                              style: TextStyle(
+                                  fontSize: 20
+                              )
                             )
                           )
+                        ]
+                      ),
+                      Divider(
+                        height: 1.0,
+                        thickness: 1.0,
+                        color: Color.fromARGB(255, 0, 0, 0)
+                      )
+                    ]
+                  )
+                ]
+              ),
+              Column(
+                children: [
+                  GestureDetector(
+                    child: exercisesFavorites[exerciseIndex] ?
+                        Icon(
+                          Icons.star_rounded,
+                          color: Color.fromARGB(255, 255, 225, 0)
                         )
-                      ]
-                    ),
-                    Divider(
-                      height: 1.0,
-                      thickness: 1.0,
-                      color: Color.fromARGB(255, 0, 0, 0)
-                    )
-                  ]
-                )
-              ]
-            ),
-            Column(
-              children: [
-                isFavoriteExercise ?
-                  Icon(
-                    Icons.star_rounded,
-                    color: Color.fromARGB(255, 255, 225, 0)
+                      :
+                        Icon(
+                          Icons.star_outline_rounded,
+                          color: Color.fromARGB(255, 150, 150, 150)
+                        )
+                    ,
+                    onTap: () {
+                      setState(() {
+                        exercisesFavorites[exerciseIndex] = !exercisesFavorites[exerciseIndex];
+                      });
+                      handler.updateIsFavorite(exercisesIds[exerciseIndex], exercisesFavorites[exerciseIndex]);
+                    }
                   )
-                :
-                  Icon(
-                    Icons.star_outline_rounded,
-                    color: Color.fromARGB(255, 150, 150, 150)
-                  )
-              ]
-            )
-          ]
+                ]
+              )
+            ]
+          ),
+          height: 65
         ),
-        height: 65
-      ),
-      onLongPress: () {
-        setState(() {
-          isSelectionMode = true;
-        });
-      }
-    );
-    exercises.add(exercise);
+        onLongPress: () {
+          setState(() {
+            isSelectionMode = true;
+          });
+        }
+      );
+      exercises.add(exercise);
+    }
   }
 
   @override
@@ -6325,8 +6947,8 @@ class _ExercisesListActivityState extends State<ExercisesListActivity> {
             itemBuilder: (BuildContext context) {
               return contextMenuBtns.map((String choice) {
                 return PopupMenuItem<String>(
-                    value: choice,
-                    child: Text(choice)
+                  value: choice,
+                  child: Text(choice)
                 );
               }).toList();
             },
@@ -6334,8 +6956,8 @@ class _ExercisesListActivityState extends State<ExercisesListActivity> {
         ]
       ),
       body: FutureBuilder(
-        future: this.handler.retrieveBodyRecords(),
-        builder: (BuildContext context, AsyncSnapshot<List<BodyRecord>> snapshot) {
+        future: this.handler.retrieveExercises(),
+        builder: (BuildContext context, AsyncSnapshot<List<Exercise>> snapshot) {
           int snapshotsCount = 0;
           if (snapshot.data != null) {
             snapshotsCount = snapshot.data!.length;
@@ -6381,7 +7003,12 @@ class _ExercisesListActivityState extends State<ExercisesListActivity> {
       ),
       persistentFooterButtons: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: (
+            isSelectionMode ?
+              MainAxisAlignment.center
+            :
+              MainAxisAlignment.end
+          ),
           children: [
             TextButton(
               style: ButtonStyle(
@@ -6389,18 +7016,45 @@ class _ExercisesListActivityState extends State<ExercisesListActivity> {
                   Color.fromARGB(255, 0, 0, 0)
                 )
               ),
-              child: Row(
-                children: [
-                  Text(
-                    'Добавить тренировки'
-                  ),
-                  Icon(
-                    Icons.chevron_right
+              child: (
+                isSelectionMode ?
+                  Column(
+                    children: [
+                      Icon(
+                        Icons.remove_circle
+                      ),
+                      Text(
+                        'Cкрыть'
+                      )
+                    ]
                   )
-                ]
+                :
+                  Row(
+                    children: [
+                      Text(
+                        'Добавить тренировки'
+                      ),
+                      Icon(
+                        Icons.chevron_right
+                      )
+                    ]
+                  )
               ),
               onPressed: () {
-                Navigator.pushNamed(context, '/exercise/add');
+                if (isSelectionMode) {
+                  int exercisesIndex = -1;
+                  for (int exerciseId in exercisesIds) {
+                    exercisesIndex++;
+                    if (exercisesSelectors[exercisesIndex]) {
+                      handler.updateIsActivated(exerciseId, 0);
+                    }
+                  }
+                  setState(() {
+                    isSelectionMode = false;
+                  });
+                } else {
+                  Navigator.pushNamed(context, '/exercise/add');
+                }
               }
             )
           ]
@@ -6425,59 +7079,67 @@ class _AddExerciseActivityState extends State<AddExerciseActivity> {
   late DatabaseHandler handler;
   List<Widget> exercises = [];
   List<bool> exercisesSelectors = [];
+  List<int> exercisesIds = [];
 
-  void addExercise(BodyRecord record) {
+  void addExercise(Exercise record) {
+    int exerciseId = record.id!;
     int exerciseIndex = exercises.length;
     String exerciseName = 'Ходьба';
-    // exerciseName = record.name;
-    exercisesSelectors.add(false);
-    Row exercise = Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Checkbox(
-          value: exercisesSelectors[exerciseIndex],
-          onChanged: (value) {
-            setState(() {
-              exercisesSelectors[exerciseIndex] = !exercisesSelectors[exerciseIndex];
-            });
-          }
-        ),
-        Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  margin: EdgeInsets.only(
-                    left: 15
+    exerciseName = record.name;
+    int rawIsExerciseActivated = record.is_activated;
+    bool isExerciseActivated = rawIsExerciseActivated == 1;
+    bool isExerciseNotActivated = !isExerciseActivated;
+    if (isExerciseNotActivated) {
+      exercisesIds.add(exerciseId);
+      exercisesSelectors.add(false);
+      Row exercise = Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Checkbox(
+            value: exercisesSelectors[exerciseIndex],
+            onChanged: (value) {
+              setState(() {
+                exercisesSelectors[exerciseIndex] = !exercisesSelectors[exerciseIndex];
+              });
+            }
+          ),
+          Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(
+                      left: 15
+                    ),
+                    child: Icon(
+                      Icons.directions_walk,
+                      color: Color.fromARGB(255, 0, 200, 0)
+                    )
                   ),
-                  child: Icon(
-                    Icons.directions_walk,
-                    color: Color.fromARGB(255, 0, 200, 0)
-                  )
-                ),
-                Container(
-                  margin: EdgeInsets.only(
-                      left: 10
-                  ),
-                  child: Text(
-                    exerciseName,
-                    style: TextStyle(
-                      fontSize: 20
+                  Container(
+                    margin: EdgeInsets.only(
+                        left: 10
+                    ),
+                    child: Text(
+                      exerciseName,
+                      style: TextStyle(
+                        fontSize: 20
+                      )
                     )
                   )
-                )
-              ]
-            ),
-            Divider(
-              height: 1.0,
-              thickness: 1.0,
-              color: Color.fromARGB(255, 0, 0, 0)
-            )
-          ]
-        )
-      ]
-    );
-    exercises.add(exercise);
+                ]
+              ),
+              Divider(
+                height: 1.0,
+                thickness: 1.0,
+                color: Color.fromARGB(255, 0, 0, 0)
+              )
+            ]
+          )
+        ]
+      );
+      exercises.add(exercise);
+    }
   }
 
   @override
@@ -6514,14 +7176,13 @@ class _AddExerciseActivityState extends State<AddExerciseActivity> {
         ]
       ),
       body: FutureBuilder(
-        future: this.handler.retrieveBodyRecords(),
-        builder: (BuildContext context, AsyncSnapshot<List<BodyRecord>> snapshot) {
+        future: this.handler.retrieveExercises(),
+        builder: (BuildContext context, AsyncSnapshot<List<Exercise>> snapshot) {
           int snapshotsCount = 0;
           if (snapshot.data != null) {
             snapshotsCount = snapshot.data!.length;
             exercises = [];
-            for (int snapshotIndex = 0; snapshotIndex <
-                snapshotsCount; snapshotIndex++) {
+            for (int snapshotIndex = 0; snapshotIndex < snapshotsCount; snapshotIndex++) {
               addExercise(snapshot.data!.elementAt(snapshotIndex));
             }
           }
@@ -6567,6 +7228,13 @@ class _AddExerciseActivityState extends State<AddExerciseActivity> {
                       ]
                     ),
                     onTap: () {
+                      int exercisesIndex = -1;
+                      for (int exerciseId in exercisesIds) {
+                        exercisesIndex++;
+                        if (exercisesSelectors[exercisesIndex]) {
+                          handler.updateIsActivated(exerciseId, 1);
+                        }
+                      }
                       Navigator.pushNamed(context, '/exercise/list');
                     }
                   )
@@ -7534,6 +8202,7 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
   CameraController? cameraController = null;
   late int selectedCameraIdx;
   late String imagePath;
+  Gender selectedGender = Gender.none;
 
   Future getImage() async {
     var image = await _picker.pickImage(source: ImageSource.gallery);
@@ -7594,6 +8263,102 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
     } catch (e) {
       print(e);
     }
+  }
+
+  setGender(context) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Выбор пола'),
+        content: Container(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Radio<Gender>(
+                    value: Gender.female,
+                    groupValue: selectedGender,
+                    onChanged: (value) {
+                      selectedGender = value!;
+                    }
+                  ),
+                  Text(
+                    'Женский'
+                  )
+                ]
+              ),
+              Row(
+                children: [
+                  Radio<Gender>(
+                    value: Gender.male,
+                    groupValue: selectedGender,
+                    onChanged: (value) {
+                      selectedGender = value!;
+                    }
+                  ),
+                  Text(
+                    'Мужской'
+                  )
+                ]
+              ),
+              Row(
+                children: [
+                  Radio<Gender>(
+                    value: Gender.other,
+                    groupValue: selectedGender,
+                    onChanged: (value) {
+                      selectedGender = value!;
+                    }
+                  ),
+                  Text(
+                    'Другое'
+                  )
+                ]
+              ),
+              Row(
+                children: [
+                  Radio<Gender>(
+                    value: Gender.undefined,
+                    groupValue: selectedGender,
+                    onChanged: (value) {
+                      selectedGender = value!;
+                    }
+                  ),
+                  Text(
+                    'Не хочу указывать'
+                  )
+                ]
+              ),
+            ]
+          )
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              setState(() {
+                selectedGender = Gender.none;
+              });
+              return Navigator.pop(context, 'Cancel');
+            },
+            child: const Text('Отмена')
+          ),
+          TextButton(
+            onPressed: () {
+
+            },
+            child: const Text('Готово')
+          )
+        ]
+      )
+    );
+  }
+
+  setGrowth(context) {
+
+  }
+
+  setWeight(context) {
+
   }
 
   @override
@@ -7789,20 +8554,25 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
                     ),
                     child: Column(
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.account_circle
-                            ),
-                            Container(
-                              child: Text(
-                                'Пол'
+                        GestureDetector(
+                          onTap: () {
+                            setGender(context);
+                          },
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.account_circle
                               ),
-                              margin: EdgeInsets.only(
+                              Container(
+                                child: Text(
+                                  'Пол'
+                                ),
+                                margin: EdgeInsets.only(
                                   left: 15
+                                )
                               )
-                            )
-                          ]
+                            ]
+                          )
                         ),
                         Row(
                           children: [
@@ -8052,4 +8822,299 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
     );
   }
 
+}
+
+class RecordBodyActivity extends StatefulWidget {
+
+  const RecordBodyActivity({Key? key}) : super(key: key);
+
+  @override
+  State<RecordBodyActivity> createState() => _RecordBodyActivityState();
+
+}
+
+class _RecordBodyActivityState extends State<RecordBodyActivity> {
+
+  late DatabaseHandler handler;
+  String fat = '';
+  String musculature = '';
+  String marks = '';
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Запись данных о весе'
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+        children: [
+          TextButton(
+            onPressed: () {
+
+            },
+            child: Text(
+              'ср, 23 февраля 16:35'
+            ),
+            style: ButtonStyle(
+              foregroundColor: MaterialStateProperty.all(
+                Color.fromARGB(255, 0, 0, 0)
+              ),
+              backgroundColor: MaterialStateProperty.all(
+                Color.fromARGB(255, 200, 200, 200)
+              ),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100.0)
+                )
+              ),
+              fixedSize: MaterialStateProperty.all<Size>(
+                Size(
+                  175.0,
+                  45.0
+                )
+              )
+            )
+          ),
+          Container(
+            padding: EdgeInsets.all(
+                15
+            ),
+            margin: EdgeInsets.symmetric(
+                vertical: 15
+            ),
+            decoration: BoxDecoration(
+                color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Вес(кг)'
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SingleChildScrollView(
+                      child: Container(
+                        height: 50,
+                        child: Column(
+                          children: []
+                        )
+                      )
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          ':'
+                        )
+                      ]
+                    ),
+                    Column(
+                      children: [
+
+                      ]
+                    )
+                  ]
+                )
+              ]
+            )
+          ),
+          Text(
+            'Указанный вес будет также выводиться в профиле\nпользователя.'
+          ),
+          Container(
+            padding: EdgeInsets.all(
+              15
+            ),
+            margin: EdgeInsets.symmetric(
+              vertical: 15
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Телесный жир.'
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          child: TextField(
+                            decoration: new InputDecoration.collapsed(
+                              hintText: '',
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  width: 1.0
+                                )
+                              )
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                fat = value;
+                              });
+                            }
+                          ),
+                          margin: EdgeInsets.only(
+                            right: 15
+                          )
+                        ),
+                        Text(
+                          '%'
+                        )
+                      ]
+                    )
+                  ]
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Скелетн. мускулат.'
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          child: TextField(
+                            decoration: new InputDecoration.collapsed(
+                              hintText: '',
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  width: 1.0
+                                )
+                              )
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                musculature = value;
+                              });
+                            }
+                          ),
+                          margin: EdgeInsets.only(
+                            right: 15
+                          )
+                        ),
+                        Text(
+                          'кг'
+                        )
+                      ]
+                    )
+                  ]
+                )
+              ]
+            )
+          ),
+          Text(
+            ''
+          ),
+          Container(
+            padding: EdgeInsets.all(
+              15
+            ),
+            margin: EdgeInsets.symmetric(
+              vertical: 15
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.note_alt
+                ),
+                Container(
+                  width: 300,
+                  child: TextField(
+                    decoration: new InputDecoration.collapsed(
+                      hintText: 'Заметки',
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          width: 1.0
+                        )
+                      )
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        marks = value;
+                      });
+                    }
+                  ),
+                  margin: EdgeInsets.only(
+                    left: 15
+                  )
+                )
+              ]
+            )
+          )
+        ]
+      ),
+      persistentFooterButtons: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            TextButton(
+              child: Text(
+                'Отмена',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18
+                )
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/body');
+              },
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.all<Color>(
+                  Color.fromARGB(255, 0, 0, 0)
+                )
+              )
+            ),
+            TextButton(
+              child: Text(
+                'Сохранить',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18
+                )
+              ),
+              onPressed: () {
+                int parsedMusculature = int.parse(musculature);
+                int parsedFat = int.parse(fat);
+                DateTime date = DateTime.now();
+                int dateDay = date.day;
+                int dateMonth = date.month;
+                int dateYear = date.year;
+                String parsedDate = '${dateDay}.${dateMonth}.${dateYear}';
+                handler.addNewBodyRecord(marks, parsedMusculature, parsedFat, 0.0, parsedDate);
+                Navigator.pushNamed(context, '/body');
+              },
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.all<Color>(
+                  Color.fromARGB(255, 0, 0, 0)
+                )
+              )
+            )
+          ]
+        )
+      ],
+    );
+  }
 }

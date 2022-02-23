@@ -11,18 +11,17 @@ class DatabaseHandler {
       join(path, 'flutter_health.db'),
       onCreate: (database, version) async {
         await database.execute(
-            "CREATE TABLE indicators(id INTEGER PRIMARY KEY, time TEXT, water INTEGER, walk INTEGER, food INTEGER, is_exercise_enabled BOOLEAN, exercise_start_time TEXT, exercise_type TEXT, exercise_duration TEXT, photo TEXT, name TEXT, gender TEXT, growth REAL, weight REAL, birthday TEXT, level TEXT)"
+          "CREATE TABLE indicators(id INTEGER PRIMARY KEY, time TEXT, water INTEGER, walk INTEGER, food INTEGER, is_exercise_enabled BOOLEAN, exercise_start_time TEXT, exercise_type TEXT, exercise_duration TEXT, photo TEXT, name TEXT, gender TEXT, growth REAL, weight REAL, birthday TEXT, level TEXT)"
         );
         await database.execute(
-            "CREATE TABLE exercises(id INTEGER PRIMARY KEY, is_activated BOOLEAN, name TEXT, logo INTEGER, is_favorite BOOLEAN)"
+          "CREATE TABLE exercises(id INTEGER PRIMARY KEY, is_activated BOOLEAN, name TEXT, logo INTEGER, is_favorite BOOLEAN)"
         );
         await database.execute(
-            "CREATE TABLE controllers(id INTEGER PRIMARY KEY, is_activated BOOLEAN, name TEXT)"
+          "CREATE TABLE controllers(id INTEGER PRIMARY KEY, is_activated BOOLEAN, name TEXT)"
         );
         await database.execute(
-            "CREATE TABLE measures(id INTEGER PRIMARY KEY, name TEXT, value TEXT)"
+          "CREATE TABLE measures(id INTEGER PRIMARY KEY, name TEXT, value TEXT)"
         );
-        addNewIndicators('', 0, 0, 0, false, '', '', '', '', '', '', 0.0, 0.0, '', '');
         await database.execute(
           "CREATE TABLE body_records(id INTEGER PRIMARY KEY, marks TEXT, musculature INTEGER, fat INTEGER, weight REAL, date TEXT)"
         );
@@ -34,6 +33,7 @@ class DatabaseHandler {
         // );
       },
       onOpen: (database) async {
+
         await database.execute(
             "CREATE TABLE sleep_records(id INTEGER PRIMARY KEY, hours TEXT, minutes TEXT, date TEXT)"
         );
@@ -60,10 +60,18 @@ class DatabaseHandler {
           print('Длина: $value.length');
           bool isPreInstall = value.length <= 0;
           if (isPreInstall) {
-            addNewIndicators('', 0, 0, 0, false, '', '', '', '', '', '', 0.0, 0.0, '', '');
+            addNewIndicators('', 0, 0, 0, 0, '', '', '', '', '', '', 0.0, 0.0, '', '');
+
+            await database.execute("DELETE FROM \"exercises\";");
+            await database.execute("INSERT INTO \"exercises\"(is_activated, name, logo, is_favorite) VALUES (1, \"Ходьба\", 0, 1);");
+            await database.execute("INSERT INTO \"exercises\"(is_activated, name, logo, is_favorite) VALUES (1, \"Бег\", 0, 1);");
+            await database.execute("INSERT INTO \"exercises\"(is_activated, name, logo, is_favorite) VALUES (1, \"Велоспорт\", 0, 1);");
+            await database.execute("INSERT INTO \"exercises\"(is_activated, name, logo, is_favorite) VALUES (0, \"Поход\", 0, 0);");
+            await database.execute("INSERT INTO \"exercises\"(is_activated, name, logo, is_favorite) VALUES (0, \"Плавание\", 0, 0);");
+            await database.execute("INSERT INTO \"exercises\"(is_activated, name, logo, is_favorite) VALUES (0, \"Йога\", 0, 0);");
+
           }
         });
-        addNewIndicators('', 0, 0, 0, false, '', '', '', '', '', '', 0.0, 0.0, '', '');
       },
       version: 1,
     );
@@ -85,7 +93,7 @@ class DatabaseHandler {
     return result;
   }
 
-  Future<int> addNewIndicators(String time, int water, int walk, int food, bool is_exercise_enabled, String exercise_start_time, String exercise_type, String exercise_duration, String photo, String name, String gender, double growth, double weight, String birthday, String level) async {
+  Future<int> addNewIndicators(String time, int water, int walk, int food, int is_exercise_enabled, String exercise_start_time, String exercise_type, String exercise_duration, String photo, String name, String gender, double growth, double weight, String birthday, String level) async {
     Indicators firstIndicators = Indicators(
         time: time,
         water: water,
@@ -105,6 +113,21 @@ class DatabaseHandler {
     );
     List<Indicators> listOfIndicators = [firstIndicators];
     return await insertIndicators(listOfIndicators);
+  }
+
+  Future<void> updateWaterIndicators(int water) async {
+    final db = await initializeDB();
+    Map<String, dynamic> values = Map<String, dynamic>();
+    values = {
+      'water': water
+    };
+    int indicatorsId = 1;
+    await db.update(
+      'indicators',
+      values,
+      where: 'id = ?',
+      whereArgs: [indicatorsId]
+    );
   }
 
   Future<int> insertBodyRecords(List<BodyRecord> bodyRecords) async {
@@ -250,6 +273,43 @@ class DatabaseHandler {
     final List<Map<String, Object?>> queryResult = await db.query('food_items');
     var returnedFoodItems = queryResult.map((e) => FoodItem.fromMap(e)).toList();
     return returnedFoodItems;
+  }
+
+  Future<List<Exercise>> retrieveExercises() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('exercises');
+    var returnedExercices = queryResult.map((e) => Exercise.fromMap(e)).toList();
+    return returnedExercices;
+  }
+
+  Future<void> updateIsActivated(int id, int isActivated) async {
+    final db = await initializeDB();
+    Map<String, dynamic> values = Map<String, dynamic>();
+    values = {
+      'is_activated': isActivated
+    };
+    int indicatorsId = 1;
+    await db.update(
+      'exercises',
+      values,
+      where: 'id = ?',
+      whereArgs: [id]
+    );
+  }
+
+  Future<void> updateIsFavorite(int id, bool isFavorite) async {
+    final db = await initializeDB();
+    Map<String, dynamic> values = Map<String, dynamic>();
+    int rawIsFavorite = isFavorite ? 1 : 0;
+    values = {
+      'is_favorite': rawIsFavorite
+    };
+    await db.update(
+      'exercises',
+      values,
+      where: 'id = ?',
+      whereArgs: [id]
+    );
   }
 
 }

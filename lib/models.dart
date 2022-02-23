@@ -4,7 +4,7 @@ class Indicators {
   final int water;
   final int walk;
   final int food;
-  final bool is_exercise_enabled;
+  final int is_exercise_enabled;
   final String exercise_start_time;
   final String exercise_type;
   final String exercise_duration;
@@ -288,6 +288,42 @@ class FoodItem {
 
 }
 
+class Exercise {
+
+  final int? id;
+  final int is_activated;
+  final String name;
+  final int logo;
+  final int is_favorite;
+
+  Exercise({
+    this.id,
+    required this.is_activated,
+    required this.name,
+    required this.logo,
+    required this.is_favorite
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'is_activated': is_activated,
+      'name': name,
+      'logo': logo,
+      'is_favorite': is_favorite
+    };
+  }
+
+  Exercise.fromMap(Map<String, dynamic> res)
+      : id = res["id"],
+        is_activated = res["is_activated"],
+        name = res["name"],
+        logo = res["logo"],
+        is_favorite = res["is_favorite"];
+
+}
+
+
 enum FoodType {
   none,
   breakfast,
@@ -296,4 +332,12 @@ enum FoodType {
   morningMeal,
   dayMeal,
   eveningMeal
+}
+
+enum Gender {
+  none,
+  undefined,
+  other,
+  female,
+  male
 }
