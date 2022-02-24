@@ -64,7 +64,10 @@ class MyApp extends StatelessWidget {
         '/account/edit': (context) => const EditMyPageActivity(),
         '/settings/general/measure': (context) => const SettingsGeneralMeasureActivity(),
         '/settings/privacy/phone': (context) => const SettingsPrivacyPhoneActivity(),
-        '/settings': (context) => const SettingsActivity()
+        '/settings': (context) => const SettingsActivity(),
+        '/foryou': (context) => const ForYouActivity(),
+        '/events': (context) => const EventsActivity(),
+        '/notifications': (context) => const NotificationsActivity()
       }
     );
   }
@@ -125,6 +128,20 @@ class _MyHomePageState extends State<MyHomePage> {
   */
   String _steps = '0';
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  bool isExerciseEnabled = false;
+  String exerciseType = '';
+  String exerciseDuration = '00:00';
+  late Timer startedTimer;
+  int startedTimerSeconds = 0;
+  int countSecondsInMinute = 60;
+  int countMinutesInHour = 60;
+  int initialSeconds = 0;
+  int startedTimerMinutes = 0;
+  int initialMinutes = 0;
+  int startedTimerHours = 0;
+  String oneCharPrefix = '0';
+  final String stopWatchTitleSeparator = ':';
+  String exerciseStartTime = '00:00';
 
   void addGlass() {
     setState(() {
@@ -384,7 +401,50 @@ class _MyHomePageState extends State<MyHomePage> {
   //   List<dynamic> accounts = await AccountManagerPlugin.getAccounts;
   //   print('${accounts.length}');
   // }
-  
+
+  void runStartedTimer() async {
+    setState(() {
+      startedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        startedTimerSeconds++;
+        bool isToggleSecond = startedTimerSeconds == countSecondsInMinute;
+        if (isToggleSecond) {
+          startedTimerSeconds = initialSeconds;
+          startedTimerMinutes++;
+          bool isToggleMinute = startedTimerMinutes == countMinutesInHour;
+          if (isToggleMinute) {
+            startedTimerMinutes = initialMinutes;
+            startedTimerHours++;
+          }
+        }
+        String updatedHoursText = '${startedTimerHours}';
+        int countHoursChars = updatedHoursText.length;
+        bool isAddHoursPrefix = countHoursChars == 1;
+        if (isAddHoursPrefix) {
+          updatedHoursText = oneCharPrefix + updatedHoursText;
+        }
+        String updatedMinutesText = '${startedTimerMinutes}';
+        int countMinutesChars = updatedMinutesText.length;
+        bool isAddMinutesPrefix = countMinutesChars == 1;
+        if (isAddMinutesPrefix) {
+          updatedMinutesText = oneCharPrefix + updatedMinutesText;
+        }
+        String updatedSecondsText = '${startedTimerSeconds}';
+        int countSecondsChars = updatedSecondsText.length;
+        bool isAddSecondsPrefix = countSecondsChars == 1;
+        if (isAddSecondsPrefix) {
+          updatedSecondsText = oneCharPrefix + updatedSecondsText;
+        }
+        String currentTime = updatedHoursText + ":" + updatedMinutesText + ":" + updatedSecondsText;
+        setState(() {
+          exerciseDuration = currentTime;
+        });
+        handler.updateExerciseIndicators(1, '00:00', exerciseType, currentTime, false);
+        print('debug: $currentTime');
+
+      });
+    });
+  }
+
   @override
   initState() {
     super.initState();
@@ -392,22 +452,33 @@ class _MyHomePageState extends State<MyHomePage> {
     this.handler = DatabaseHandler();
     this.handler.initializeDB().whenComplete(() async {
       setState(() {
-      });
-      this.handler.retrieveIndicators().then((indicators) {
-        if (indicators.length >= 1) {
-          Indicators indicatorsItem = indicators[0];
-          glassesCount = indicatorsItem.water;
-        }
-        print('glassesCount: ${glassesCount}');
-        this.handler.retrieveControllers().then((controllers) {
-          print('controllers: ${controllers.length}');
-          for (Controller controller in controllers) {
-            // controllersActives.add(controller.is_activated == 1 ? true : false);
+        this.handler.retrieveIndicators().then((indicators) {
+          if (indicators.length >= 1) {
+            Indicators indicatorsItem = indicators[0];
+            glassesCount = indicatorsItem.water;
+            int rawIsExerciseEnabled = indicatorsItem.is_exercise_enabled;
             setState(() {
-              controllersActives[controller.id! - 1] = controller.is_activated == 1 ? true : false;
-              initialControllersActives[controller.id! - 1] = controller.is_activated == 1 ? true : false;
+              isExerciseEnabled = rawIsExerciseEnabled == 1;
+              exerciseType = indicatorsItem.exercise_type;
+              exerciseDuration = indicatorsItem.exercise_duration;
+              exerciseStartTime = indicatorsItem.exercise_start_time;
+              if (isExerciseEnabled) {
+                List<String> exerciseDurationParts = exerciseDuration.split(stopWatchTitleSeparator);
+                startedTimerHours = int.parse(exerciseDurationParts[0]);
+                startedTimerMinutes = int.parse(exerciseDurationParts[1]);
+                startedTimerSeconds = int.parse(exerciseDurationParts[2]);
+                runStartedTimer();
+              }
             });
           }
+          print('glassesCount: ${glassesCount}, isExerciseEnabled: ${isExerciseEnabled}');
+          this.handler.retrieveControllers().then((controllers) {
+            print('controllers: ${controllers.length}');
+            for (Controller controller in controllers) {
+              controllersActives[controller.id! - 1] = controller.is_activated == 1 ? true : false;
+              initialControllersActives[controller.id! - 1] = controller.is_activated == 1 ? true : false;
+            }
+          });
         });
       });
     });
@@ -426,7 +497,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       title = appName;
     });
-    
+
   }
 
   @override
@@ -455,9 +526,22 @@ class _MyHomePageState extends State<MyHomePage> {
                       title = elementsControlHeader;
                       isSelectionMode = true;
                     });
-                  } else if (menuItemName == 'Настр.') {
-                    Navigator.pushNamed(context, '/settings');
                   }
+                } else if (currentTab == 2) {
+                  if (menuItemName == 'Направления фитнеса') {
+
+                  } else if (menuItemName == 'Журнал программы') {
+
+                  }
+                }
+                if (menuItemName == 'Настр.') {
+                  Navigator.pushNamed(context, '/settings');
+                } else if (menuItemName == 'События') {
+                  Navigator.pushNamed(context, '/events');
+                } else if (menuItemName == 'Уведомления') {
+                  Navigator.pushNamed(context, '/notifications');
+                } else if (menuItemName == 'Для вас') {
+                  Navigator.pushNamed(context, '/foryou');
                 }
               }
             )
@@ -753,200 +837,256 @@ class _MyHomePageState extends State<MyHomePage> {
                           onTap: () {
                             Navigator.pushNamed(context, '/exercise');
                           },
-                          child: Container(
-                            padding: EdgeInsets.all(
-                              15
-                            ),
-                            margin: EdgeInsets.symmetric(
-                                vertical: 15
-                            ),
-                            decoration: BoxDecoration(
-                              color: Color.fromARGB(255, 255, 255, 255)
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    isSelectionMode ?
-                                      GestureDetector(
-                                        child: (
-                                          controllersActives[2] ?
-                                          Icon(
-                                            Icons.remove_circle,
-                                            color: Color.fromARGB(255, 255, 0, 0),
-                                          )
-                                              :
-                                          Icon(
-                                            Icons.add_circle,
-                                            color: Color.fromARGB(255, 0, 200, 0),
-                                          )
-                                        ),
-                                        onTap: () {
-                                          updateController('exercise', 2);
-                                        }
-                                      )
-                                    :
-                                      Row()
-                                  ]
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: (
+                            isExerciseEnabled ?
+                              GestureDetector(
+                                child: Container(
+                                  padding: EdgeInsets.all(
+                                    15
+                                  ),
+                                  margin: EdgeInsets.symmetric(
+                                    vertical: 15
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color.fromARGB(255, 0, 150, 0)
+                                  ),
+                                  child: Column(
                                     children: [
-                                    Text(
-                                      'Упражнение',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold
-                                      )
-                                    ),
-                                    Text(
-                                      'Посмотреть журнал',
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color.fromARGB(255, 150, 150, 150)
-                                        )
-                                    )
-                                  ]
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    TextButton(
-                                      style: ButtonStyle(
-                                        backgroundColor: MaterialStateProperty.all<Color>(
-                                          Color.fromARGB(255, 255, 255, 255)
-                                        ),
-                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                          RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(100.0),
-                                            side: BorderSide(
-                                              color: Color.fromARGB(255, 150, 150, 150)
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            exerciseType,
+                                            style: TextStyle(
+                                              color: Color.fromARGB(255, 200, 200, 200)
                                             )
-                                          )
-                                        ),
-                                        fixedSize: MaterialStateProperty.all<Size>(
-                                          Size(
-                                            45.0,
-                                            45.0
-                                          )
-                                        )
-                                      ),
-                                      onPressed: () {
-                                        // handler.addNewExerciseRecord('Ходьба', '22.11.2000', '00:00:00');
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/exercise/record',
-                                          arguments: {
-                                            'exerciseType': 'Ходьба'
-                                          }
-                                        );
-                                      },
-                                      child: Icon(
-                                        Icons.directions_walk
-                                      )
-                                    ),
-                                    TextButton(
-                                      style: ButtonStyle(
-                                        backgroundColor: MaterialStateProperty.all<Color>(
-                                          Color.fromARGB(255, 255, 255, 255)
-                                        ),
-                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                          RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(100.0),
-                                            side: BorderSide(
-                                              color: Color.fromARGB(255, 150, 150, 150)
-                                            )
-                                          )
-                                        ),
-                                        fixedSize: MaterialStateProperty.all<Size>(
-                                          Size(
-                                            45.0,
-                                            45.0
-                                          )
-                                        )
-                                      ),
-                                      onPressed: () {
-                                        // handler.addNewExerciseRecord('Бег', '22.11.2000', '00:00:00');
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/exercise/record',
-                                          arguments: {
-                                            'exerciseType': 'Бег'
-                                          }
-                                        );
-                                      },
-                                      child: Icon(
-                                        Icons.directions_run
-                                      )
-                                    ),
-                                    TextButton(
-                                        style: ButtonStyle(
-                                          backgroundColor: MaterialStateProperty.all<Color>(
-                                            Color.fromARGB(255, 255, 255, 255)
                                           ),
-                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                            RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(100.0),
-                                              side: BorderSide(
-                                                color: Color.fromARGB(255, 150, 150, 150)
+                                          Text(
+                                            'Начало: ${exerciseStartTime}',
+                                            style: TextStyle(
+                                              color: Color.fromARGB(255, 200, 200, 200)
+                                            )
+                                          )
+                                        ]
+                                      ),
+                                      Text(
+                                        exerciseDuration,
+                                        style: TextStyle(
+                                          color: Color.fromARGB(255, 200, 200, 200)
+                                        )
+                                      )
+                                    ]
+                                  )
+                                ),
+                                onTap: () {
+                                  if (startedTimer != null) {
+                                    startedTimer.cancel();
+                                  }
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/exercise/started',
+                                    arguments: {
+                                      'exerciseType': exerciseType
+                                    }
+                                  );
+                                }
+                              )
+                            :
+                              Container(
+                                padding: EdgeInsets.all(
+                                  15
+                                ),
+                                margin: EdgeInsets.symmetric(
+                                    vertical: 15
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 255, 255, 255)
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        isSelectionMode ?
+                                          GestureDetector(
+                                            child: (
+                                              controllersActives[2] ?
+                                              Icon(
+                                                Icons.remove_circle,
+                                                color: Color.fromARGB(255, 255, 0, 0),
+                                              )
+                                                  :
+                                              Icon(
+                                                Icons.add_circle,
+                                                color: Color.fromARGB(255, 0, 200, 0),
+                                              )
+                                            ),
+                                            onTap: () {
+                                              updateController('exercise', 2);
+                                            }
+                                          )
+                                        :
+                                          Row()
+                                      ]
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                        Text(
+                                          'Упражнение',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold
+                                          )
+                                        ),
+                                        Text(
+                                          'Посмотреть журнал',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color.fromARGB(255, 150, 150, 150)
+                                          )
+                                        )
+                                      ]
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        TextButton(
+                                          style: ButtonStyle(
+                                            backgroundColor: MaterialStateProperty.all<Color>(
+                                              Color.fromARGB(255, 255, 255, 255)
+                                            ),
+                                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(100.0),
+                                                side: BorderSide(
+                                                  color: Color.fromARGB(255, 150, 150, 150)
+                                                )
+                                              )
+                                            ),
+                                            fixedSize: MaterialStateProperty.all<Size>(
+                                              Size(
+                                                45.0,
+                                                45.0
                                               )
                                             )
                                           ),
-                                          fixedSize: MaterialStateProperty.all<Size>(
-                                            Size(
-                                              45.0,
-                                              45.0
-                                            )
+                                          onPressed: () {
+                                            // handler.addNewExerciseRecord('Ходьба', '22.11.2000', '00:00:00');
+                                            Navigator.pushNamed(
+                                              context,
+                                              '/exercise/record',
+                                              arguments: {
+                                                'exerciseType': 'Ходьба'
+                                              }
+                                            );
+                                          },
+                                          child: Icon(
+                                            Icons.directions_walk
                                           )
                                         ),
-                                        onPressed: () {
-                                          // handler.addNewExerciseRecord('Велоспорт', '22.11.2000', '00:00:00');
-                                          Navigator.pushNamed(
-                                            context,
-                                            '/exercise/record',
-                                            arguments: {
-                                              'exerciseType': 'Велоспорт'
-                                            }
-                                          );
-                                        },
-                                        child: Icon(
-                                          Icons.bike_scooter
-                                        )
-                                    ),
-                                    TextButton(
-                                        style: ButtonStyle(
+                                        TextButton(
+                                          style: ButtonStyle(
                                             backgroundColor: MaterialStateProperty.all<Color>(
-                                                Color.fromARGB(255, 255, 255, 255)
+                                              Color.fromARGB(255, 255, 255, 255)
                                             ),
                                             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(100.0),
+                                                side: BorderSide(
+                                                  color: Color.fromARGB(255, 150, 150, 150)
+                                                )
+                                              )
+                                            ),
+                                            fixedSize: MaterialStateProperty.all<Size>(
+                                              Size(
+                                                45.0,
+                                                45.0
+                                              )
+                                            )
+                                          ),
+                                          onPressed: () {
+                                            // handler.addNewExerciseRecord('Бег', '22.11.2000', '00:00:00');
+                                            Navigator.pushNamed(
+                                              context,
+                                              '/exercise/record',
+                                              arguments: {
+                                                'exerciseType': 'Бег'
+                                              }
+                                            );
+                                          },
+                                          child: Icon(
+                                            Icons.directions_run
+                                          )
+                                        ),
+                                        TextButton(
+                                            style: ButtonStyle(
+                                              backgroundColor: MaterialStateProperty.all<Color>(
+                                                Color.fromARGB(255, 255, 255, 255)
+                                              ),
+                                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                                 RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(100.0),
-                                                    side: BorderSide(
-                                                        color: Color.fromARGB(255, 150, 150, 150)
+                                                  borderRadius: BorderRadius.circular(100.0),
+                                                  side: BorderSide(
+                                                    color: Color.fromARGB(255, 150, 150, 150)
+                                                  )
+                                                )
+                                              ),
+                                              fixedSize: MaterialStateProperty.all<Size>(
+                                                Size(
+                                                  45.0,
+                                                  45.0
+                                                )
+                                              )
+                                            ),
+                                            onPressed: () {
+                                              // handler.addNewExerciseRecord('Велоспорт', '22.11.2000', '00:00:00');
+                                              Navigator.pushNamed(
+                                                context,
+                                                '/exercise/record',
+                                                arguments: {
+                                                  'exerciseType': 'Велоспорт'
+                                                }
+                                              );
+                                            },
+                                            child: Icon(
+                                              Icons.bike_scooter
+                                            )
+                                        ),
+                                        TextButton(
+                                            style: ButtonStyle(
+                                                backgroundColor: MaterialStateProperty.all<Color>(
+                                                    Color.fromARGB(255, 255, 255, 255)
+                                                ),
+                                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                                    RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(100.0),
+                                                        side: BorderSide(
+                                                            color: Color.fromARGB(255, 150, 150, 150)
+                                                        )
+                                                    )
+                                                ),
+                                                fixedSize: MaterialStateProperty.all<Size>(
+                                                    Size(
+                                                        45.0,
+                                                        45.0
                                                     )
                                                 )
                                             ),
-                                            fixedSize: MaterialStateProperty.all<Size>(
-                                                Size(
-                                                    45.0,
-                                                    45.0
-                                                )
+                                            onPressed: () {
+                                              Navigator.pushNamed(context, '/exercise/list');
+                                            },
+                                            child: Icon(
+                                              Icons.list
                                             )
-                                        ),
-                                        onPressed: () {
-                                          Navigator.pushNamed(context, '/exercise/list');
-                                        },
-                                        child: Icon(
-                                          Icons.list
                                         )
+                                      ]
                                     )
                                   ]
                                 )
-                              ]
+                              )
                             )
-                          )
                         )
                       :
                         Row(),
@@ -7600,6 +7740,12 @@ class _RecordExerciseActivityState extends State<RecordExerciseActivity> {
                 'Начать'
               ),
               onPressed: () {
+                DateTime currentDate = DateTime.now();
+                int currentDateDay = currentDate.day;
+                int currentDateMonth = currentDate.month;
+                int currentDateYear = currentDate.year;
+                String rawCurrentDate = '${currentDateDay}.${currentDateMonth}.${currentDateYear}';
+                handler.updateExerciseIndicators(1, rawCurrentDate, exerciseType, '00:00:00', true);
                 Navigator.pushNamed(
                   context,
                   '/exercise/started',
@@ -7680,21 +7826,13 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
         bool isToggleSecond = startedTimerSeconds == countSecondsInMinute;
         if (isToggleSecond) {
           // setState(() {
-            bool isMinutesLeft = startedTimerMinutes >= countMinutesInHour;
-            if (isMinutesLeft) {
-              startedTimerSeconds = initialSeconds;
-              startedTimerMinutes++;
-            }
+            startedTimerSeconds = initialSeconds;
           // });
+          startedTimerMinutes++;
           bool isToggleMinute = startedTimerMinutes == countMinutesInHour;
           if (isToggleMinute) {
-            // setState(() {
-              bool isMinutesLeft = startedTimerMinutes >= countMinutesInHour;
-              if (isMinutesLeft) {
-                startedTimerMinutes = initialMinutes;
-                startedTimerHours++;
-              }
-            // });
+            startedTimerMinutes = initialMinutes;
+            startedTimerHours++;
           }
         }
         String updatedHoursText = '${startedTimerHours}';
@@ -7716,8 +7854,10 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
           updatedSecondsText = oneCharPrefix + updatedSecondsText;
         }
         String currentTime = updatedHoursText + ":" + updatedMinutesText + ":" + updatedSecondsText;
-        startTimerTitle = currentTime;
-
+        setState(() {
+          startTimerTitle = currentTime;
+        });
+        handler.updateExerciseIndicators(1, '00:00', exerciseType, currentTime, false);
         print('debug: $currentTime');
 
       });
@@ -7739,6 +7879,7 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
     int pickedDateYear = pickedDate.year;
     String rawDate = '${pickedDateDay}.${pickedDateMonth}.${pickedDateYear}';
     handler.addNewExerciseRecord(exerciseType, rawDate, startTimerTitle);
+    handler.updateExerciseIndicators(0, '00:00', exerciseType, startTimerTitle, false);
     Navigator.pushNamed(context, '/exercise/results');
   }
 
@@ -8446,6 +8587,9 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
   late int selectedCameraIdx;
   late String imagePath;
   Gender selectedGender = Gender.none;
+  String realSelectedGrowthPart = '0';
+  String imaginarySelectedGrowthPart = '0';
+  Gender initialGender = Gender.none;
 
   Future getImage() async {
     var image = await _picker.pickImage(source: ImageSource.gallery);
@@ -8579,6 +8723,72 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
           TextButton(
             onPressed: () {
               setState(() {
+                selectedGender = initialGender;
+              });
+              return Navigator.pop(context, 'Cancel');
+            },
+            child: const Text('Отмена')
+          ),
+          TextButton(
+            onPressed: () {
+              return Navigator.pop(context, 'OK');
+            },
+            child: const Text('Готово')
+          )
+        ]
+      )
+    );
+  }
+
+  setGrowth(context) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Рост'),
+        content: Container(
+          child: Row(
+            children: [
+              Container(
+                child: TextField(
+                  decoration: new InputDecoration.collapsed(
+                    hintText: '',
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        width: 1.0
+                      )
+                    )
+                  ),
+                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                  onChanged: (value) {
+                    setState(() {
+                      realSelectedGrowthPart = value;
+                    });
+                  }
+                )
+              ),
+              TextField(
+                decoration: new InputDecoration.collapsed(
+                  hintText: '',
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      width: 1.0
+                    )
+                  )
+                ),
+                // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
+                onChanged: (value) {
+                  setState(() {
+                    imaginarySelectedGrowthPart = value;
+                  });
+                }
+              )
+            ]
+          )
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              setState(() {
                 selectedGender = Gender.none;
               });
               return Navigator.pop(context, 'Cancel');
@@ -8596,10 +8806,6 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
     );
   }
 
-  setGrowth(context) {
-
-  }
-
   setWeight(context) {
 
   }
@@ -8610,7 +8816,23 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
     this.handler = DatabaseHandler();
     this.handler.initializeDB().whenComplete(() async {
       setState(() {
-
+        this.handler.retrieveIndicators().then((indicators) {
+          if (indicators.length >= 1) {
+            Indicators indicatorsItem = indicators[0];
+            Gender gender = Gender.none;
+            if (indicatorsItem.gender == 'Мужской') {
+              gender = Gender.male;
+            } else if (indicatorsItem.gender == 'Женский') {
+              gender = Gender.female;
+            } else if (indicatorsItem.gender == 'Другое') {
+              gender = Gender.other;
+            } else if (indicatorsItem.gender == 'Не хочу указывать') {
+              gender = Gender.undefined;
+            }
+            initialGender = gender;
+            selectedGender = initialGender;
+          }
+        });
       });
     });
     _picker = ImagePicker();
@@ -8817,20 +9039,25 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
                             ]
                           )
                         ),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.people
-                            ),
-                            Container(
-                              child: Text(
-                                'Рост'
+                        GestureDetector(
+                          onTap: () {
+                            setGrowth(context);
+                          },
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.people
                               ),
-                              margin: EdgeInsets.only(
-                                left: 15
+                              Container(
+                                child: Text(
+                                  'Рост'
+                                ),
+                                margin: EdgeInsets.only(
+                                  left: 15
+                                )
                               )
-                            )
-                          ]
+                            ]
+                          )
                         ),
                         Row(
                           children: [
@@ -9056,7 +9283,29 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
                 'Сохранить'
               ),
               onPressed: () {
-
+                setState(() {
+                  bool isNotTakePhoto = !isTakePhoto;
+                  if (isNotTakePhoto) {
+                    String gender = '';
+                    bool isMale = selectedGender == Gender.male;
+                    bool isFemale = selectedGender == Gender.female;
+                    bool isOther = selectedGender == Gender.other;
+                    bool isUndefined = selectedGender == Gender.undefined;
+                    if (isMale) {
+                      gender = 'Мужской';
+                    } else if (isFemale) {
+                      gender = 'Женский';
+                    } else if (isOther) {
+                      gender = 'Другое';
+                    } else if (isUndefined) {
+                      gender = 'Не хочу указывать';
+                    }
+                    double growth = 0.0;
+                    double weight = 0.0;
+                    handler.updateAccountIndicators(gender, growth, weight);
+                    Navigator.pushNamed(context, '/main');
+                  }
+                });
               }
             )
           ]
@@ -10004,6 +10253,48 @@ class SettingsGeneralMeasureActivity extends StatefulWidget {
 }
 
 class _SettingsGeneralMeasureActivityState extends State<SettingsGeneralMeasureActivity> {
+
+  var growthContextMenuBtns = {
+    'см',
+    'фт., дюйм'
+  };
+  var weightContextMenuBtns = {
+    'кг',
+    'фунт'
+  };
+  var tempContextMenuBtns = {
+    '°C',
+    '°F'
+  };
+  var distanseContextMenuBtns = {
+    'км',
+    'ми, фт'
+  };
+  var sugarContextMenuBtns = {
+    'мг/дл',
+    'ммоль/л'
+  };
+  var pressureContextMenuBtns = {
+    'мм рт. ст.',
+    'кПа'
+  };
+  var hba1cContextMenuBtns = {
+    '%',
+    'ммоль/моль'
+  };
+  var waterContextMenuBtns = {
+    'мл',
+    'жидк. унц.'
+  };
+  String growthMeasure = 'см';
+  String weightMeasure = 'кг';
+  String tempMeasure = '°C';
+  String distanseMeasure = 'км';
+  String sugarMeasure = 'ммоль/л';
+  String pressureMeasure = 'мм рт. ст.';
+  String hba1cMeasure = '%';
+  String waterMeasure = 'мл';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -10024,165 +10315,285 @@ class _SettingsGeneralMeasureActivityState extends State<SettingsGeneralMeasureA
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            'Рост',
-                            style: TextStyle(
-                              fontSize: 18
-                            )
-                          ),
-                          Text(
-                            'cм',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 200, 0)
-                            )
-                          ),
-                        ]
-                      )
-                    ]
+                  PopupMenuButton<String>(
+                    itemBuilder: (BuildContext context) {
+                      return growthContextMenuBtns.map((String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice)
+                        );
+                      }).toList();
+                    },
+                    onSelected: (menuItemName) {
+                      setState(() {
+                        growthMeasure = menuItemName;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Рост',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              growthMeasure,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
+                            ),
+                          ]
+                        )
+                      ]
+                    )
                   ),
-                  Row(
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            'Вес',
-                            style: TextStyle(
-                              fontSize: 18
-                            )
-                          ),
-                          Text(
-                            'кг',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 200, 0)
-                            )
-                          ),
-                        ]
-                      )
-                    ]
+                  PopupMenuButton<String>(
+                    itemBuilder: (BuildContext context) {
+                      return weightContextMenuBtns.map((String choice) {
+                        return PopupMenuItem<String>(
+                            value: choice,
+                            child: Text(choice)
+                        );
+                      }).toList();
+                    },
+                    onSelected: (menuItemName) {
+                      setState(() {
+                        weightMeasure = menuItemName;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Вес',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              weightMeasure,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
+                            ),
+                          ]
+                        )
+                      ]
+                    )
                   ),
-                  Row(
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            'Температура',
-                            style: TextStyle(
-                              fontSize: 18
+                  PopupMenuButton<String>(
+                    itemBuilder: (BuildContext context) {
+                      return tempContextMenuBtns.map((String choice) {
+                        return PopupMenuItem<String>(
+                            value: choice,
+                            child: Text(choice)
+                        );
+                      }).toList();
+                    },
+                    onSelected: (menuItemName) {
+                      setState(() {
+                        tempMeasure = menuItemName;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Температура',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              tempMeasure,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
                             )
-                          ),
-                          Text(
-                            '°C',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 200, 0)
-                            )
-                          )
-                        ]
-                      )
-                    ]
+                          ]
+                        )
+                      ]
+                    )
                   ),
-                  Row(
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            'Расстояние',
-                            style: TextStyle(
-                              fontSize: 18
-                            )
-                          ),
-                          Text(
-                            'км',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 200, 0)
-                            )
-                          ),
-                        ]
-                      )
-                    ]
+                  PopupMenuButton<String>(
+                    itemBuilder: (BuildContext context) {
+                      return distanseContextMenuBtns.map((String choice) {
+                        return PopupMenuItem<String>(
+                            value: choice,
+                            child: Text(choice)
+                        );
+                      }).toList();
+                    },
+                    onSelected: (menuItemName) {
+                      setState(() {
+                        distanseMeasure = menuItemName;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Расстояние',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              distanseMeasure,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
+                            ),
+                          ]
+                        )
+                      ]
+                    )
                   ),
-                  Row(
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            'Сахар крови',
-                            style: TextStyle(
-                              fontSize: 18
-                            )
-                          ),
-                          Text(
-                            'ммоль/л',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 200, 0)
-                            )
-                          ),
-                        ]
-                      )
-                    ]
+                  PopupMenuButton<String>(
+                    itemBuilder: (BuildContext context) {
+                      return sugarContextMenuBtns.map((String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice)
+                        );
+                      }).toList();
+                    },
+                    onSelected: (menuItemName) {
+                      setState(() {
+                        sugarMeasure = menuItemName;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Сахар крови',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              sugarMeasure,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
+                            ),
+                          ]
+                        )
+                      ]
+                    )
                   ),
-                  Row(
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            'Кровянное давление',
-                            style: TextStyle(
-                              fontSize: 18
-                            )
-                          ),
-                          Text(
-                            'мм. рт. ст.',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 200, 0)
-                            )
-                          ),
-                        ]
-                      )
-                    ]
+                  PopupMenuButton<String>(
+                    itemBuilder: (BuildContext context) {
+                      return pressureContextMenuBtns.map((String choice) {
+                        return PopupMenuItem<String>(
+                            value: choice,
+                            child: Text(choice)
+                        );
+                      }).toList();
+                    },
+                    onSelected: (menuItemName) {
+                      setState(() {
+                        pressureMeasure = menuItemName;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Кровянное давление',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              pressureMeasure,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
+                            ),
+                          ]
+                        )
+                      ]
+                    )
                   ),
-                  Row(
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            'HbA1c',
-                            style: TextStyle(
-                              fontSize: 18
-                            )
-                          ),
-                          Text(
-                            '%',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 200, 0)
-                            )
-                          ),
-                        ]
-                      )
-                    ]
+                  PopupMenuButton<String>(
+                    itemBuilder: (BuildContext context) {
+                      return hba1cContextMenuBtns.map((String choice) {
+                        return PopupMenuItem<String>(
+                            value: choice,
+                            child: Text(choice)
+                        );
+                      }).toList();
+                    },
+                    onSelected: (menuItemName) {
+                      setState(() {
+                        hba1cMeasure = menuItemName;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'HbA1c',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              hba1cMeasure,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
+                            ),
+                          ]
+                        )
+                      ]
+                    )
                   ),
-                  Row(
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            'Объем выпиваемой воды',
-                            style: TextStyle(
-                              fontSize: 18
-                            )
-                          ),
-                          Text(
-                            'мл',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 0, 200, 0)
-                            )
-                          ),
-                        ]
-                      )
-                    ]
+                  PopupMenuButton<String>(
+                    itemBuilder: (BuildContext context) {
+                      return waterContextMenuBtns.map((String choice) {
+                        return PopupMenuItem<String>(
+                            value: choice,
+                            child: Text(choice)
+                        );
+                      }).toList();
+                    },
+                    onSelected: (menuItemName) {
+                      setState(() {
+                        waterMeasure = menuItemName;
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Объем выпиваемой воды',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              waterMeasure,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
+                            ),
+                          ]
+                        )
+                      ]
+                    )
                   )
                 ]
               ),
@@ -10195,6 +10606,105 @@ class _SettingsGeneralMeasureActivityState extends State<SettingsGeneralMeasureA
             )
           ]
         )
+    );
+  }
+}
+
+class NotificationsActivity extends StatefulWidget {
+
+  const NotificationsActivity({Key? key}) : super(key: key);
+
+  @override
+  State<NotificationsActivity> createState() => _NotificationsActivityState();
+
+}
+
+class _NotificationsActivityState extends State<NotificationsActivity> {
+
+  @override
+  initState() {
+    super.initState();
+  }
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Уведомления'
+        )
+      ),
+      body: Column(
+        children: [
+
+        ]
+      )
+    );
+  }
+}
+
+class ForYouActivity extends StatefulWidget {
+
+  const ForYouActivity({Key? key}) : super(key: key);
+
+  @override
+  State<ForYouActivity> createState() => _ForYouActivityState();
+
+}
+
+class _ForYouActivityState extends State<ForYouActivity> {
+
+  @override
+  initState() {
+    super.initState();
+  }
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+            title: Text(
+                'Для вас'
+            )
+        ),
+        body: Column(
+            children: [
+
+            ]
+        )
+    );
+  }
+}
+
+class EventsActivity extends StatefulWidget {
+
+  const EventsActivity({Key? key}) : super(key: key);
+
+  @override
+  State<EventsActivity> createState() => _EventsActivityState();
+
+}
+
+class _EventsActivityState extends State<EventsActivity> {
+
+  @override
+  initState() {
+    super.initState();
+  }
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'События'
+        )
+      ),
+      body: Column(
+        children: [
+
+        ]
+      )
     );
   }
 }

@@ -33,21 +33,48 @@ class DatabaseHandler {
         // );
       },
       onOpen: (database) async {
+        await database.execute(
+          "DELETE FROM \"measures\";"
+        );
+        await database.execute(
+          "INSERT INTO \"measures\"(name, value) VALUES (\"Рост\", \"см\");"
+        );
+        await database.execute(
+          "INSERT INTO \"measures\"(name, value) VALUES (\"Вес\", \"кг\");"
+        );
+        await database.execute(
+          "INSERT INTO \"measures\"(name, value) VALUES (\"Температура\", \"℃\");"
+        );
+        await database.execute(
+          "INSERT INTO \"measures\"(name, value) VALUES (\"Расстояние\", \"км\");"
+        );
+        await database.execute(
+          "INSERT INTO \"measures\"(name, value) VALUES (\"Сахар в крови\", \"мг/дл\");"
+        );
+        await database.execute(
+          "INSERT INTO \"measures\"(name, value) VALUES (\"Давление\", \"мм рт. ст.\");"
+        );
+        await database.execute(
+          "INSERT INTO \"measures\"(name, value) VALUES (\"HbA1c\", \"%\");"
+        );
+        await database.execute(
+          "INSERT INTO \"measures\"(name, value) VALUES (\"Вода\", \"мл\");"
+        );
 
         await database.execute(
-            "CREATE TABLE sleep_records(id INTEGER PRIMARY KEY, hours TEXT, minutes TEXT, date TEXT)"
+            "CREATE TABLE IF NOT EXISTS sleep_records(id INTEGER PRIMARY KEY, hours TEXT, minutes TEXT, date TEXT)"
         );
         await database.execute(
-            "CREATE TABLE food_records(id INTEGER PRIMARY KEY, type TEXT)"
+            "CREATE TABLE IF NOT EXISTS food_records(id INTEGER PRIMARY KEY, type TEXT)"
         );
         await database.execute(
-            "CREATE TABLE exercise_records(id INTEGER PRIMARY KEY, type TEXT, datetime TEXT, duration TEXT)"
+            "CREATE TABLE IF NOT EXISTS exercise_records(id INTEGER PRIMARY KEY, type TEXT, datetime TEXT, duration TEXT)"
         );
         await database.execute(
-            "CREATE TABLE food_items(id INTEGER PRIMARY KEY, name TEXT, callories INTEGER, total_carbs INTEGER, total_fats INTEGER, protein INTEGER, saturated_fats INTEGER, trans_fats INTEGER, cholesterol INTEGER, sodium INTEGER, potassium INTEGER, cellulose INTEGER, sugar INTEGER, a INTEGER, c INTEGER, calcium INTEGER, iron INTEGER, portions REAL, type TEXT)"
+            "CREATE TABLE IF NOT EXISTS food_items(id INTEGER PRIMARY KEY, name TEXT, callories INTEGER, total_carbs INTEGER, total_fats INTEGER, protein INTEGER, saturated_fats INTEGER, trans_fats INTEGER, cholesterol INTEGER, sodium INTEGER, potassium INTEGER, cellulose INTEGER, sugar INTEGER, a INTEGER, c INTEGER, calcium INTEGER, iron INTEGER, portions REAL, type TEXT)"
         );
         await database.execute(
-            "CREATE TABLE awards(id INTEGER PRIMARY KEY, name TEXT, description TEXT, type TEXT)"
+            "CREATE TABLE IF NOT EXISTS awards(id INTEGER PRIMARY KEY, name TEXT, description TEXT, type TEXT)"
         );
         // await database.execute(
         //   "DELETE DATABASE flutter_health"
@@ -139,6 +166,46 @@ class DatabaseHandler {
     );
   }
 
+  Future<void> updateAccountIndicators(String gender, double growth, double weight) async {
+    final db = await initializeDB();
+    Map<String, dynamic> values = Map<String, dynamic>();
+    values = {
+      'gender': gender,
+      'growth': growth,
+      'weight': weight
+    };
+    int indicatorsId = 1;
+    await db.update(
+        'indicators',
+        values,
+        where: 'id = ?',
+        whereArgs: [indicatorsId]
+    );
+  }
+
+  Future<void> updateExerciseIndicators(int is_exercise_enabled, String exercise_start_time, String exercise_type, String exercise_duration, bool isUpdateStartTime) async {
+    final db = await initializeDB();
+    Map<String, dynamic> values = Map<String, dynamic>();
+    values = {
+      'is_exercise_enabled': is_exercise_enabled,
+      'exercise_start_time': exercise_start_time,
+      'exercise_type': exercise_type,
+      'exercise_duration': exercise_duration
+    };
+    if (!isUpdateStartTime) {
+      values.removeWhere((key, value) {
+        return key == 'exercise_start_time';
+      });
+    }
+    int indicatorsId = 1;
+    await db.update(
+      'indicators',
+      values,
+      where: 'id = ?',
+      whereArgs: [indicatorsId]
+    );
+  }
+
   Future<int> insertBodyRecords(List<BodyRecord> bodyRecords) async {
     int result = 0;
     final Database db = await initializeDB();
@@ -150,11 +217,11 @@ class DatabaseHandler {
 
   Future<int> addNewBodyRecord(String marks, int musculature, int fat, double weight, String date) async {
     BodyRecord firstBodyRecord = BodyRecord(
-        marks: marks,
-        musculature: musculature,
-        fat: fat,
-        weight: weight,
-        date: date
+      marks: marks,
+      musculature: musculature,
+      fat: fat,
+      weight: weight,
+      date: date
     );
     List<BodyRecord> listOfBodyRecords = [firstBodyRecord];
     return await insertBodyRecords(listOfBodyRecords);
