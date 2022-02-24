@@ -323,6 +323,32 @@ class Exercise {
 
 }
 
+class Controller {
+
+  final int? id;
+  final int is_activated;
+  final String name;
+
+  Controller({
+    this.id,
+    required this.is_activated,
+    required this.name
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'is_activated': is_activated,
+      'name': name
+    };
+  }
+
+  Controller.fromMap(Map<String, dynamic> res)
+      : id = res["id"],
+        is_activated = res["is_activated"],
+        name = res["name"];
+
+}
 
 enum FoodType {
   none,

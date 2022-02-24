@@ -11,9 +11,6 @@ import 'package:sqflite/sqflite.dart';
 // import 'package:pedometer/pedometer.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
-/*
-камера требует более высокий minSdkVersion
-*/
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
 /*
@@ -44,11 +41,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Softtrack Здоровье'),
+      home: const MyHomePage(),
       routes: {
-        '/main': (context) => const MyHomePage(
-          title: 'Softtrack здоровье'
-        ),
+        '/main': (context) => const MyHomePage(),
         '/active': (context) => const ActiveActivity(),
         '/walk': (context) => const WalkActivity(),
         '/exercise/results': (context) => const RecordExerciseResultsActivity(),
@@ -66,7 +61,10 @@ class MyApp extends StatelessWidget {
         '/body/record': (context) => const RecordBodyActivity(),
         '/body': (context) => const BodyActivity(),
         '/water': (context) => const WaterActivity(),
-        '/account/edit': (context) => const EditMyPageActivity()
+        '/account/edit': (context) => const EditMyPageActivity(),
+        '/settings/general/measure': (context) => const SettingsGeneralMeasureActivity(),
+        '/settings/privacy/phone': (context) => const SettingsPrivacyPhoneActivity(),
+        '/settings': (context) => const SettingsActivity()
       }
     );
   }
@@ -74,9 +72,7 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
 
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -98,6 +94,28 @@ class _MyHomePageState extends State<MyHomePage> {
     'Уведомления',
     'Настр.',
   };
+  List<bool> controllersActives = [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ];
+  String title = '';
+  String appName = 'Softtrack здоровье';
+  String elementsControlHeader = 'Управление элементами';
+  bool isSelectionMode = false;
+  List<bool> initialControllersActives = [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ];
 
   /*
   sdk не позволяет использовать педометр
@@ -237,23 +255,6 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.pushNamed(context, '/sleep/record');
   }
 
-  Future<void> initMobileNumberState() async {
-    if (!await MobileNumber.hasPhonePermission) {
-      await MobileNumber.requestPhonePermission;
-      return;
-    }
-    String mobileNumber = '';
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      mobileNumber = (await MobileNumber.mobileNumber)!;
-      List<SimCard> _simCard = (await MobileNumber.getSimCards)!;
-      print('mobileNumber: ${mobileNumber}');
-      print('_simCard: ${_simCard.length}');
-    } on PlatformException catch (e) {
-      debugPrint("Failed to get mobile number because of '${e.message}'");
-    }
-  }
-
   void onSelectNotification(String? notification) async {
     print('${notification}');
   }
@@ -329,6 +330,61 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  updateController(controllerName, controllerIndex) {
+    handler.retrieveControllers().then((value) {
+      for (Controller controller in value) {
+        if (controllerName == controller.name) {
+          print('controller.is_activated: ${controller.is_activated}');
+          // handler.updateIsActivatedController(controllerName, controller.is_activated == 1 ? 0 : 1);
+          break;
+        }
+      }
+      setState(() {
+        controllersActives[controllerIndex] = !controllersActives[controllerIndex];
+      });
+    });
+  }
+
+  saveElementsControl() {
+    setState(() {
+      title = appName;
+      isSelectionMode = false;
+    });
+    handler.updateIsActivatedController('active', controllersActives[0] ? 1 : 0);
+    handler.updateIsActivatedController('walk', controllersActives[1] ? 1 : 0);
+    handler.updateIsActivatedController('exercise', controllersActives[2] ? 1 : 0);
+    handler.updateIsActivatedController('food', controllersActives[3] ? 1 : 0);
+    handler.updateIsActivatedController('sleep', controllersActives[4] ? 1 : 0);
+    handler.updateIsActivatedController('body', controllersActives[5] ? 1 : 0);
+    handler.updateIsActivatedController('water', controllersActives[6] ? 1 : 0);
+    initialControllersActives[0] = controllersActives[0];
+    initialControllersActives[1] = controllersActives[1];
+    initialControllersActives[2] = controllersActives[2];
+    initialControllersActives[3] = controllersActives[3];
+    initialControllersActives[4] = controllersActives[4];
+    initialControllersActives[5] = controllersActives[5];
+    initialControllersActives[6] = controllersActives[6];
+  }
+
+  cancelElementsControl() {
+    setState(() {
+      title = appName;
+      isSelectionMode = false;
+      controllersActives[0] = initialControllersActives[0];
+      controllersActives[1] = initialControllersActives[1];
+      controllersActives[2] = initialControllersActives[2];
+      controllersActives[3] = initialControllersActives[3];
+      controllersActives[4] = initialControllersActives[4];
+      controllersActives[5] = initialControllersActives[5];
+      controllersActives[6] = initialControllersActives[6];
+    });
+  }
+
+  // getAccount() async {
+  //   List<dynamic> accounts = await AccountManagerPlugin.getAccounts;
+  //   print('${accounts.length}');
+  // }
+  
   @override
   initState() {
     super.initState();
@@ -343,6 +399,16 @@ class _MyHomePageState extends State<MyHomePage> {
           glassesCount = indicatorsItem.water;
         }
         print('glassesCount: ${glassesCount}');
+        this.handler.retrieveControllers().then((controllers) {
+          print('controllers: ${controllers.length}');
+          for (Controller controller in controllers) {
+            // controllersActives.add(controller.is_activated == 1 ? true : false);
+            setState(() {
+              controllersActives[controller.id! - 1] = controller.is_activated == 1 ? true : false;
+              initialControllersActives[controller.id! - 1] = controller.is_activated == 1 ? true : false;
+            });
+          }
+        });
       });
     });
     /*
@@ -350,34 +416,28 @@ class _MyHomePageState extends State<MyHomePage> {
     initPlatformState();
     */
     /*
-    не работает account-manager-plugin
-    Future getAccountFuture = getAccount();
-    getAccountFuture.then((value) {
-      print('${value.length}');
-    });
+      не работает account-manager-plugin
+      getAccount();
     */
-    /*getPhoneNumber().then((value) {
-      print('phone number: ${value}');
-    });*/
-    MobileNumber.listenPhonePermission((isPermissionGranted) {
-      if (isPermissionGranted) {
-        initMobileNumberState();
-      } else {}
-    });
 
-    initMobileNumberState();
     initializeNotifications();
     // showStepsNotification();
+
+    setState(() {
+      title = appName;
+    });
+    
   }
 
   @override
   Widget build(BuildContext context) {
+
     return DefaultTabController(
       initialIndex: 0,
       length: 5,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(title),
           actions: [
             PopupMenuButton<String>(
               itemBuilder: (BuildContext context) {
@@ -388,6 +448,18 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 }).toList();
               },
+              onSelected: (menuItemName) {
+                if (currentTab == 0) {
+                  if (menuItemName == 'Управление элементами') {
+                    setState(() {
+                      title = elementsControlHeader;
+                      isSelectionMode = true;
+                    });
+                  } else if (menuItemName == 'Настр.') {
+                    Navigator.pushNamed(context, '/settings');
+                  }
+                }
+              }
             )
           ],
           bottom: TabBar(
@@ -417,6 +489,44 @@ class _MyHomePageState extends State<MyHomePage> {
             ]
           )
         ),
+        persistentFooterButtons: [
+          isSelectionMode ?
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  style: ButtonStyle(
+                    foregroundColor: MaterialStateProperty.all<Color>(
+                      Color.fromARGB(255, 0, 0, 0)
+                    )
+                  ),
+                  child: Text(
+                    'Отмена'
+                  ),
+                  onPressed: () {
+                    cancelElementsControl();
+                  }
+                ),
+                TextButton(
+                  style: ButtonStyle(
+                    foregroundColor: MaterialStateProperty.all<Color>(
+                      Color.fromARGB(255, 0, 0, 0)
+                    )
+                  ),
+                  child: Text(
+                    'Сохранить'
+                  ),
+                  onPressed: () {
+                    saveElementsControl();
+                  }
+                )
+              ]
+            )
+          :
+            Row(
+
+            )
+        ],
         body: TabBarView(
           children: <Widget>[
             SingleChildScrollView(
@@ -426,297 +536,284 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   child: Column(
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/active');
-                        },
-                        child: Container(
-                          margin: EdgeInsets.symmetric(
-                              vertical: 15
-                          ),
-                          padding: EdgeInsets.all(
-                              15
-                          ),
-                          decoration: BoxDecoration(
-                              color: Color.fromARGB(255, 255, 255, 255)
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Icon(
-                                    Icons.remove_circle,
-                                    color: Color.fromARGB(255, 255, 0, 0),
-                                  )
-                                ]
-                              ),
-                              Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      isSelectionMode || (!isSelectionMode && controllersActives[0]) ?
+                        GestureDetector(
+                          onTap: () {
+                            // Navigator.pushNamed(context, '/active');
+                          },
+                          child: Container(
+                            margin: EdgeInsets.symmetric(
+                                vertical: 15
+                            ),
+                            padding: EdgeInsets.all(
+                                15
+                            ),
+                            decoration: BoxDecoration(
+                                color: Color.fromARGB(255, 255, 255, 255)
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Column(
-                                        children: [
-                                          Container(
-                                            margin: EdgeInsets.symmetric(
-                                              vertical: 15
-                                            ),
-                                            child: Text(
-                                              'Активность',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 20
+                                    isSelectionMode ?
+                                      GestureDetector(
+                                        child: (
+                                          controllersActives[0] ?
+                                            Icon(
+                                              Icons.remove_circle,
+                                              color: Color.fromARGB(255, 255, 0, 0),
+                                            )
+                                          :
+                                          Icon(
+                                            Icons.add_circle,
+                                            color: Color.fromARGB(255, 0, 200, 0),
+                                          )
+                                        ),
+                                        onTap: () {
+                                          updateController('active', 0);
+                                        }
+                                      )
+                                    :
+                                      Row()
+                                  ]
+                                ),
+                                Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                          children: [
+                                            Container(
+                                              margin: EdgeInsets.symmetric(
+                                                vertical: 15
+                                              ),
+                                              child: Text(
+                                                'Активность',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 20
+                                                )
                                               )
+                                            ),
+                                            Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Container(
+                                                      margin: EdgeInsets.symmetric(
+                                                          horizontal: 10
+                                                      ),
+                                                      child: Column(
+                                                          children: [
+                                                            Icon(
+                                                                Icons.directions_walk,
+                                                                color: Color.fromARGB(255, 0, 150, 0)
+                                                            ),
+                                                            Text(
+                                                                '0'
+                                                            )
+                                                          ]
+                                                      )
+                                                  ),
+                                                  Container(
+                                                      margin: EdgeInsets.symmetric(
+                                                          horizontal: 10
+                                                      ),
+                                                      child: Column(
+                                                          children: [
+                                                            Icon(
+                                                                Icons.timer,
+                                                                color: Color.fromARGB(255, 0, 0, 255)
+                                                            ),
+                                                            Text(
+                                                                '0'
+                                                            )
+                                                          ]
+                                                      )
+                                                  ),
+                                                  Container(
+                                                      margin: EdgeInsets.symmetric(
+                                                          horizontal: 10
+                                                      ),
+                                                      child: Column(
+                                                          children: [
+                                                            Icon(
+                                                                Icons.fireplace,
+                                                                color: Color.fromARGB(255, 255, 0, 0)
+                                                            ),
+                                                            Text(
+                                                                '0'
+                                                            )
+                                                          ]
+                                                      )
+                                                  )
+                                                ]
+                                            )
+                                          ]
+                                      ),
+                                      Image.network(
+                                          'https://cdn4.iconfinder.com/data/icons/medical-115/60/medical-flat-098-heart-beat-128.png',
+                                          width: 65
+                                      )
+                                    ]
+                                )
+                              ]
+                            )
+                          )
+                        )
+                      :
+                        Row(),
+                      isSelectionMode || (!isSelectionMode && controllersActives[1]) ?
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/walk');
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Color.fromARGB(255, 255, 255, 255)
+                            ),
+                            padding: EdgeInsets.all(
+                                15
+                            ),
+                            margin: EdgeInsets.symmetric(
+                              vertical: 15
+                            ),
+                            child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      isSelectionMode ?
+                                        GestureDetector(
+                                          child: (
+                                            controllersActives[1] ?
+                                            Icon(
+                                              Icons.remove_circle,
+                                              color: Color.fromARGB(255, 255, 0, 0),
+                                            )
+                                                :
+                                            Icon(
+                                              Icons.add_circle,
+                                              color: Color.fromARGB(255, 0, 200, 0),
+                                            )
+                                          ),
+                                          onTap: () {
+                                            updateController('walk', 1);
+                                          }
+                                        )
+                                      :
+                                        Row()
+                                    ]
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        children: [
+                                          Text(
+                                            'Шаги',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20
                                             )
                                           ),
                                           Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Container(
-                                                    margin: EdgeInsets.symmetric(
-                                                        horizontal: 10
-                                                    ),
-                                                    child: Column(
-                                                        children: [
-                                                          Icon(
-                                                              Icons.directions_walk,
-                                                              color: Color.fromARGB(255, 0, 150, 0)
-                                                          ),
-                                                          Text(
-                                                              '0'
-                                                          )
-                                                        ]
-                                                    )
-                                                ),
-                                                Container(
-                                                    margin: EdgeInsets.symmetric(
-                                                        horizontal: 10
-                                                    ),
-                                                    child: Column(
-                                                        children: [
-                                                          Icon(
-                                                              Icons.timer,
-                                                              color: Color.fromARGB(255, 0, 0, 255)
-                                                          ),
-                                                          Text(
-                                                              '0'
-                                                          )
-                                                        ]
-                                                    )
-                                                ),
-                                                Container(
-                                                    margin: EdgeInsets.symmetric(
-                                                        horizontal: 10
-                                                    ),
-                                                    child: Column(
-                                                        children: [
-                                                          Icon(
-                                                              Icons.fireplace,
-                                                              color: Color.fromARGB(255, 255, 0, 0)
-                                                          ),
-                                                          Text(
-                                                              '0'
-                                                          )
-                                                        ]
-                                                    )
+                                            children: [
+                                              Container(
+                                                child: Text(
+                                                  _steps,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold
+                                                  )
                                                 )
-                                              ]
+                                              ),
+                                              Text(
+                                                '/6000'
+                                              )
+                                            ]
                                           )
                                         ]
-                                    ),
-                                    Image.network(
-                                        'https://cdn4.iconfinder.com/data/icons/medical-115/60/medical-flat-098-heart-beat-128.png',
-                                        width: 65
-                                    )
-                                  ]
-                              )
-                            ]
-                          )
-                        )
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/walk');
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 255, 255, 255)
-                          ),
-                          padding: EdgeInsets.all(
-                              15
-                          ),
-                          margin: EdgeInsets.symmetric(
-                            vertical: 15
-                          ),
-                          child: Column(
-                              children: [
-                                Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Icon(
-                                        Icons.remove_circle,
-                                        color: Color.fromARGB(255, 255, 0, 0),
+                                      ),
+                                      Column(
+                                        children: [
+                                          Text(
+                                            '0%'
+                                          )
+                                        ]
                                       )
                                     ]
+                                  )
+                                ]
+                            )
+                          )
+                        )
+                      :
+                        Row(),
+                      isSelectionMode || (!isSelectionMode && controllersActives[2]) ?
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/exercise');
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(
+                              15
+                            ),
+                            margin: EdgeInsets.symmetric(
+                                vertical: 15
+                            ),
+                            decoration: BoxDecoration(
+                              color: Color.fromARGB(255, 255, 255, 255)
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    isSelectionMode ?
+                                      GestureDetector(
+                                        child: (
+                                          controllersActives[2] ?
+                                          Icon(
+                                            Icons.remove_circle,
+                                            color: Color.fromARGB(255, 255, 0, 0),
+                                          )
+                                              :
+                                          Icon(
+                                            Icons.add_circle,
+                                            color: Color.fromARGB(255, 0, 200, 0),
+                                          )
+                                        ),
+                                        onTap: () {
+                                          updateController('exercise', 2);
+                                        }
+                                      )
+                                    :
+                                      Row()
+                                  ]
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                    Text(
+                                      'Упражнение',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold
+                                      )
+                                    ),
+                                    Text(
+                                      'Посмотреть журнал',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 150, 150, 150)
+                                        )
+                                    )
+                                  ]
                                 ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Column(
-                                      children: [
-                                        Text(
-                                          'Шаги',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20
-                                          )
-                                        ),
-                                        Row(
-                                          children: [
-                                            Container(
-                                              child: Text(
-                                                _steps,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold
-                                                )
-                                              )
-                                            ),
-                                            Text(
-                                              '/6000'
-                                            )
-                                          ]
-                                        )
-                                      ]
-                                    ),
-                                    Column(
-                                      children: [
-                                        Text(
-                                          '0%'
-                                        )
-                                      ]
-                                    )
-                                  ]
-                                )
-                              ]
-                          )
-                        )
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/exercise');
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(
-                            15
-                          ),
-                          margin: EdgeInsets.symmetric(
-                              vertical: 15
-                          ),
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 255, 255, 255)
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Icon(
-                                    Icons.remove_circle,
-                                    color: Color.fromARGB(255, 255, 0, 0),
-                                  )
-                                ]
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                  Text(
-                                    'Упражнение',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold
-                                    )
-                                  ),
-                                  Text(
-                                    'Посмотреть журнал',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color.fromARGB(255, 150, 150, 150)
-                                      )
-                                  )
-                                ]
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  TextButton(
-                                    style: ButtonStyle(
-                                      backgroundColor: MaterialStateProperty.all<Color>(
-                                        Color.fromARGB(255, 255, 255, 255)
-                                      ),
-                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(100.0),
-                                          side: BorderSide(
-                                            color: Color.fromARGB(255, 150, 150, 150)
-                                          )
-                                        )
-                                      ),
-                                      fixedSize: MaterialStateProperty.all<Size>(
-                                        Size(
-                                          45.0,
-                                          45.0
-                                        )
-                                      )
-                                    ),
-                                    onPressed: () {
-                                      // handler.addNewExerciseRecord('Ходьба', '22.11.2000', '00:00:00');
-                                      Navigator.pushNamed(
-                                        context,
-                                        '/exercise/record',
-                                        arguments: {
-                                          'exerciseType': 'Ходьба'
-                                        }
-                                      );
-                                    },
-                                    child: Icon(
-                                      Icons.directions_walk
-                                    )
-                                  ),
-                                  TextButton(
-                                    style: ButtonStyle(
-                                      backgroundColor: MaterialStateProperty.all<Color>(
-                                        Color.fromARGB(255, 255, 255, 255)
-                                      ),
-                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(100.0),
-                                          side: BorderSide(
-                                            color: Color.fromARGB(255, 150, 150, 150)
-                                          )
-                                        )
-                                      ),
-                                      fixedSize: MaterialStateProperty.all<Size>(
-                                        Size(
-                                          45.0,
-                                          45.0
-                                        )
-                                      )
-                                    ),
-                                    onPressed: () {
-                                      // handler.addNewExerciseRecord('Бег', '22.11.2000', '00:00:00');
-                                      Navigator.pushNamed(
-                                        context,
-                                        '/exercise/record',
-                                        arguments: {
-                                          'exerciseType': 'Бег'
-                                        }
-                                      );
-                                    },
-                                    child: Icon(
-                                      Icons.directions_run
-                                    )
-                                  ),
-                                  TextButton(
+                                    TextButton(
                                       style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.all<Color>(
                                           Color.fromARGB(255, 255, 255, 255)
@@ -737,175 +834,169 @@ class _MyHomePageState extends State<MyHomePage> {
                                         )
                                       ),
                                       onPressed: () {
-                                        // handler.addNewExerciseRecord('Велоспорт', '22.11.2000', '00:00:00');
+                                        // handler.addNewExerciseRecord('Ходьба', '22.11.2000', '00:00:00');
                                         Navigator.pushNamed(
                                           context,
                                           '/exercise/record',
                                           arguments: {
-                                            'exerciseType': 'Велоспорт'
+                                            'exerciseType': 'Ходьба'
                                           }
                                         );
                                       },
                                       child: Icon(
-                                        Icons.bike_scooter
+                                        Icons.directions_walk
                                       )
-                                  ),
-                                  TextButton(
+                                    ),
+                                    TextButton(
                                       style: ButtonStyle(
-                                          backgroundColor: MaterialStateProperty.all<Color>(
-                                              Color.fromARGB(255, 255, 255, 255)
-                                          ),
-                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                              RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(100.0),
-                                                  side: BorderSide(
-                                                      color: Color.fromARGB(255, 150, 150, 150)
-                                                  )
-                                              )
-                                          ),
-                                          fixedSize: MaterialStateProperty.all<Size>(
-                                              Size(
-                                                  45.0,
-                                                  45.0
-                                              )
+                                        backgroundColor: MaterialStateProperty.all<Color>(
+                                          Color.fromARGB(255, 255, 255, 255)
+                                        ),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                          RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(100.0),
+                                            side: BorderSide(
+                                              color: Color.fromARGB(255, 150, 150, 150)
+                                            )
                                           )
-                                      ),
-                                      onPressed: () {
-                                        Navigator.pushNamed(context, '/exercise/list');
-                                      },
-                                      child: Icon(
-                                        Icons.list
-                                      )
-                                  )
-                                ]
-                              )
-                            ]
-                          )
-                        )
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/food',
-                            arguments: {
-                              'isAddFoodRecord': false
-                            }
-                          );
-                        },
-                        child: Container(
-                          margin: EdgeInsets.symmetric(
-                            vertical: 15
-                          ),
-                          padding: EdgeInsets.all(
-                            25
-                          ),
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 255, 255, 255)
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Icon(
-                                    Icons.remove_circle,
-                                    color: Color.fromARGB(255, 255, 0, 0),
-                                  )
-                                ]
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Еда',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20
+                                        ),
+                                        fixedSize: MaterialStateProperty.all<Size>(
+                                          Size(
+                                            45.0,
+                                            45.0
+                                          )
                                         )
                                       ),
-                                      Row(
-                                        children: [
-                                          Container(
-                                            margin: EdgeInsets.symmetric(
-                                              horizontal: 10
-                                            ),
-                                            child: Text(
-                                              '0',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 28
+                                      onPressed: () {
+                                        // handler.addNewExerciseRecord('Бег', '22.11.2000', '00:00:00');
+                                        Navigator.pushNamed(
+                                          context,
+                                          '/exercise/record',
+                                          arguments: {
+                                            'exerciseType': 'Бег'
+                                          }
+                                        );
+                                      },
+                                      child: Icon(
+                                        Icons.directions_run
+                                      )
+                                    ),
+                                    TextButton(
+                                        style: ButtonStyle(
+                                          backgroundColor: MaterialStateProperty.all<Color>(
+                                            Color.fromARGB(255, 255, 255, 255)
+                                          ),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(100.0),
+                                              side: BorderSide(
+                                                color: Color.fromARGB(255, 150, 150, 150)
                                               )
                                             )
                                           ),
-                                          Text(
-                                            '/1779 ккал'
+                                          fixedSize: MaterialStateProperty.all<Size>(
+                                            Size(
+                                              45.0,
+                                              45.0
+                                            )
                                           )
-                                        ]
-                                      )
-                                    ]
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      addFoodRecord(context);
-                                      // handler.addNewFoodRecord('Завтрак');
-                                    },
-                                    child: Text(
-                                      'Запись'
+                                        ),
+                                        onPressed: () {
+                                          // handler.addNewExerciseRecord('Велоспорт', '22.11.2000', '00:00:00');
+                                          Navigator.pushNamed(
+                                            context,
+                                            '/exercise/record',
+                                            arguments: {
+                                              'exerciseType': 'Велоспорт'
+                                            }
+                                          );
+                                        },
+                                        child: Icon(
+                                          Icons.bike_scooter
+                                        )
                                     ),
-                                    style: ButtonStyle(
-                                      foregroundColor: MaterialStateProperty.all<Color>(
-                                        Color.fromARGB(255, 0, 0, 0)
-                                      ),
-                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(100.0),
-                                          side: BorderSide(
-                                            color: Color.fromARGB(255, 150, 150, 150)
-                                          )
+                                    TextButton(
+                                        style: ButtonStyle(
+                                            backgroundColor: MaterialStateProperty.all<Color>(
+                                                Color.fromARGB(255, 255, 255, 255)
+                                            ),
+                                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                                RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(100.0),
+                                                    side: BorderSide(
+                                                        color: Color.fromARGB(255, 150, 150, 150)
+                                                    )
+                                                )
+                                            ),
+                                            fixedSize: MaterialStateProperty.all<Size>(
+                                                Size(
+                                                    45.0,
+                                                    45.0
+                                                )
+                                            )
+                                        ),
+                                        onPressed: () {
+                                          Navigator.pushNamed(context, '/exercise/list');
+                                        },
+                                        child: Icon(
+                                          Icons.list
                                         )
-                                      ),
-                                      fixedSize: MaterialStateProperty.all<Size>(
-                                        Size(
-                                          125.0,
-                                          45.0
-                                        )
-                                      )
                                     )
-                                 )
-                                ]
-                              )
-                            ]
+                                  ]
+                                )
+                              ]
+                            )
                           )
                         )
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/sleep');
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(
+                      :
+                        Row(),
+                      isSelectionMode || (!isSelectionMode && controllersActives[3]) ?
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/food',
+                              arguments: {
+                                'isAddFoodRecord': false
+                              }
+                            );
+                          },
+                          child: Container(
+                            margin: EdgeInsets.symmetric(
+                              vertical: 15
+                            ),
+                            padding: EdgeInsets.all(
                               25
-                          ),
-                          margin: EdgeInsets.symmetric(
-                            vertical: 15
-                          ),
-                          decoration: BoxDecoration(
+                            ),
+                            decoration: BoxDecoration(
                               color: Color.fromARGB(255, 255, 255, 255)
-                          ),
-                          child: Column(
+                            ),
+                            child: Column(
                               children: [
                                 Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Icon(
-                                        Icons.remove_circle,
-                                        color: Color.fromARGB(255, 255, 0, 0),
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    isSelectionMode ?
+                                      GestureDetector(
+                                        child: (
+                                          controllersActives[3] ?
+                                          Icon(
+                                            Icons.remove_circle,
+                                            color: Color.fromARGB(255, 255, 0, 0),
+                                          )
+                                              :
+                                          Icon(
+                                            Icons.add_circle,
+                                            color: Color.fromARGB(255, 0, 200, 0),
+                                          )
+                                        ),
+                                        onTap: () {
+                                          updateController('food', 3);
+                                        }
                                       )
-                                    ]
+                                    :
+                                      Row()
+                                  ]
                                 ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -914,21 +1005,37 @@ class _MyHomePageState extends State<MyHomePage> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Сон',
+                                          'Еда',
                                           style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 20
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20
                                           )
                                         ),
-                                        Text(
-                                            'Как вам спалось'
+                                        Row(
+                                          children: [
+                                            Container(
+                                              margin: EdgeInsets.symmetric(
+                                                horizontal: 10
+                                              ),
+                                              child: Text(
+                                                '0',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 28
+                                                )
+                                              )
+                                            ),
+                                            Text(
+                                              '/1779 ккал'
+                                            )
+                                          ]
                                         )
                                       ]
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                        // handler.addNewSleepRecord('00', '00', '22.11.2000');
-                                        addSleepRecord(context);
+                                        addFoodRecord(context);
+                                        // handler.addNewFoodRecord('Завтрак');
                                       },
                                       child: Text(
                                         'Запись'
@@ -952,14 +1059,113 @@ class _MyHomePageState extends State<MyHomePage> {
                                           )
                                         )
                                       )
-                                    )
+                                   )
                                   ]
                                 )
                               ]
+                            )
                           )
                         )
-                      ),
-                      GestureDetector(
+                      :
+                        Row(),
+                      isSelectionMode || (!isSelectionMode && controllersActives[4]) ?
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/sleep');
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(
+                                25
+                            ),
+                            margin: EdgeInsets.symmetric(
+                              vertical: 15
+                            ),
+                            decoration: BoxDecoration(
+                                color: Color.fromARGB(255, 255, 255, 255)
+                            ),
+                            child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      isSelectionMode ?
+                                        GestureDetector(
+                                          child: (
+                                            controllersActives[4] ?
+                                            Icon(
+                                              Icons.remove_circle,
+                                              color: Color.fromARGB(255, 255, 0, 0),
+                                            )
+                                                :
+                                            Icon(
+                                              Icons.add_circle,
+                                              color: Color.fromARGB(255, 0, 200, 0),
+                                            )
+                                          ),
+                                          onTap: () {
+                                            updateController('sleep', 4);
+                                          }
+                                        )
+                                      :
+                                        Row()
+                                    ]
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Сон',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20
+                                            )
+                                          ),
+                                          Text(
+                                              'Как вам спалось'
+                                          )
+                                        ]
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          // handler.addNewSleepRecord('00', '00', '22.11.2000');
+                                          addSleepRecord(context);
+                                        },
+                                        child: Text(
+                                          'Запись'
+                                        ),
+                                        style: ButtonStyle(
+                                          foregroundColor: MaterialStateProperty.all<Color>(
+                                            Color.fromARGB(255, 0, 0, 0)
+                                          ),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(100.0),
+                                              side: BorderSide(
+                                                color: Color.fromARGB(255, 150, 150, 150)
+                                              )
+                                            )
+                                          ),
+                                          fixedSize: MaterialStateProperty.all<Size>(
+                                            Size(
+                                              125.0,
+                                              45.0
+                                            )
+                                          )
+                                        )
+                                      )
+                                    ]
+                                  )
+                                ]
+                            )
+                          )
+                        )
+                      :
+                        Row(),
+                      isSelectionMode || (!isSelectionMode && controllersActives[5]) ?
+                        GestureDetector(
                           onTap: () {
                             Navigator.pushNamed(context, '/body');
                           },
@@ -974,170 +1180,236 @@ class _MyHomePageState extends State<MyHomePage> {
                                 color: Color.fromARGB(255, 255, 255, 255)
                             ),
                             child: Column(
-                                children: [
-                                  Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        Icon(
-                                          Icons.remove_circle,
-                                          color: Color.fromARGB(255, 255, 0, 0),
-                                        )
-                                      ]
-                                  ),
-                                  Container(
-                                      child: Text(
-                                          'Состав тела',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 20
-                                          )
-                                      ),
-                                      margin: EdgeInsets.symmetric(
-                                          vertical: 15
-                                      )
-                                  ),
-                                  Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Container(
-                                            margin: EdgeInsets.symmetric(
-                                                horizontal: 10
-                                            ),
-                                            child: Column(
-                                                children: [
-                                                  Icon(
-                                                      Icons.home,
-                                                      color: Color.fromARGB(255, 0, 150, 0)
-                                                  ),
-                                                  Text(
-                                                      '0',
-                                                      style: TextStyle(
-                                                          fontWeight: FontWeight.bold,
-                                                          fontSize: 24
-                                                      )
-                                                  )
-                                                ]
-                                            )
-                                        ),
-                                        Container(
-                                            margin: EdgeInsets.symmetric(
-                                                horizontal: 10
-                                            ),
-                                            child: Column(
-                                                children: [
-                                                  Icon(
-                                                      Icons.circle,
-                                                      color: Colors.brown
-                                                  ),
-                                                  Text(
-                                                      '0',
-                                                      style: TextStyle(
-                                                          fontWeight: FontWeight.bold,
-                                                          fontSize: 24
-                                                      )
-                                                  )
-                                                ]
-                                            )
-                                        ),
-                                        Container(
-                                            margin: EdgeInsets.symmetric(
-                                                horizontal: 10
-                                            ),
-                                            child: Column(
-                                                children: [
-                                                  Icon(
-                                                      Icons.sports_rugby,
-                                                      color: Color.fromARGB(255, 0, 0, 255)
-                                                  ),
-                                                  Text(
-                                                      '0',
-                                                      style: TextStyle(
-                                                          fontWeight: FontWeight.bold,
-                                                          fontSize: 24
-                                                      )
-                                                  )
-                                                ]
-                                            )
-                                        )
-                                      ]
-                                  )
-                                ]
-                            )
-                        )
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/water');
-                        },
-                        child: Container(
-                        decoration: BoxDecoration(
-                          color: Color.fromARGB(255, 255, 255, 255)
-                        ),
-                        padding: EdgeInsets.all(
-                          15
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Icon(
-                                  Icons.remove_circle,
-                                  color: Color.fromARGB(255, 255, 0, 0),
-                                )
-                              ]
-                            ),
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                      children: [
-                                        Text(
-                                          'Вода',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    isSelectionMode ?
+                                      GestureDetector(
+                                        child: (
+                                          controllersActives[5] ?
+                                          Icon(
+                                            Icons.remove_circle,
+                                            color: Color.fromARGB(255, 255, 0, 0),
+                                          )
+                                              :
+                                          Icon(
+                                            Icons.add_circle,
+                                            color: Color.fromARGB(255, 0, 200, 0),
                                           )
                                         ),
-                                        Row(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              '$glassesCount',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 28
+                                        onTap: () {
+                                          updateController('body', 5);
+                                        }
+                                      )
+                                    :
+                                      Row()
+                                  ]
+                                ),
+                                Container(
+                                    child: Text(
+                                        'Состав тела',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20
+                                        )
+                                    ),
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 15
+                                    )
+                                ),
+                                Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        margin: EdgeInsets.symmetric(
+                                            horizontal: 10
+                                        ),
+                                        child: Column(
+                                            children: [
+                                              Icon(
+                                                  Icons.home,
+                                                  color: Color.fromARGB(255, 0, 150, 0)
+                                              ),
+                                              Text(
+                                                  '0',
+                                                  style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 24
+                                                  )
                                               )
+                                            ]
+                                        )
+                                      ),
+                                      Container(
+                                        margin: EdgeInsets.symmetric(
+                                          horizontal: 10
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Icon(
+                                              Icons.circle,
+                                              color: Colors.brown
                                             ),
-                                            Container(
-                                                margin: EdgeInsets.symmetric(
-                                                  horizontal: 5
-                                                ),
-                                                child: Text(
-                                                  'стак.'
-                                                )
+                                            Text(
+                                              '0',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 24
+                                              )
                                             )
                                           ]
                                         )
-                                      ]
-                                  ),
-                                  Row(
-                                    children: [
+                                      ),
                                       Container(
-                                        child: TextButton(
-
+                                        margin: EdgeInsets.symmetric(
+                                            horizontal: 10
+                                        ),
+                                        child: Column(
+                                            children: [
+                                              Icon(
+                                                  Icons.sports_rugby,
+                                                  color: Color.fromARGB(255, 0, 0, 255)
+                                              ),
+                                              Text(
+                                                  '0',
+                                                  style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 24
+                                                  )
+                                              )
+                                            ]
+                                        )
+                                      )
+                                    ]
+                                  )
+                                ]
+                            )
+                          )
+                        )
+                      :
+                        Row(),
+                      isSelectionMode || (!isSelectionMode && controllersActives[6]) ?
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/water');
+                          },
+                          child: Container(
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(255, 255, 255, 255)
+                          ),
+                          padding: EdgeInsets.all(
+                            15
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  isSelectionMode ? 
+                                    GestureDetector(
+                                      child: (
+                                          controllersActives[6] ?
+                                          Icon(
+                                            Icons.remove_circle,
+                                            color: Color.fromARGB(255, 255, 0, 0),
+                                          )
+                                              :
+                                          Icon(
+                                            Icons.add_circle,
+                                            color: Color.fromARGB(255, 0, 200, 0),
+                                          )
+                                      ),
+                                      onTap: () {
+                                        updateController('water', 6);
+                                      }
+                                    )
+                                  :
+                                    Row()
+                                ]
+                              ),
+                              Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                        children: [
+                                          Text(
+                                            'Вода',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18
+                                            )
+                                          ),
+                                          Row(
+                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                '$glassesCount',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 28
+                                                )
+                                              ),
+                                              Container(
+                                                  margin: EdgeInsets.symmetric(
+                                                    horizontal: 5
+                                                  ),
+                                                  child: Text(
+                                                    'стак.'
+                                                  )
+                                              )
+                                            ]
+                                          )
+                                        ]
+                                    ),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          child: TextButton(
+  
+                                            onPressed: () {
+                                              removeGlass();
+                                            },
+                                            child: Icon(
+                                              Icons.remove
+                                            ),
+                                            style: ButtonStyle(
+                                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                                RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(100.0),
+                                                  side: BorderSide(
+                                                    color: removeGlassesBtnColor
+                                                  )
+                                                )
+                                              ),
+                                              fixedSize: MaterialStateProperty.all<Size>(
+                                                Size(
+                                                  45.0,
+                                                  45.0
+                                                )
+                                              ),
+                                              foregroundColor: MaterialStateProperty.all<Color>(
+                                                removeGlassesBtnColor
+                                              )
+                                            )
+                                          ),
+                                          margin: EdgeInsets.all(
+                                            15
+                                          )
+                                        ),
+                                        TextButton(
                                           onPressed: () {
-                                            removeGlass();
+                                            addGlass();
                                           },
                                           child: Icon(
-                                            Icons.remove
+                                              Icons.add
                                           ),
                                           style: ButtonStyle(
                                             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                               RoundedRectangleBorder(
                                                 borderRadius: BorderRadius.circular(100.0),
                                                 side: BorderSide(
-                                                  color: removeGlassesBtnColor
+                                                  color: Color.fromARGB(255, 150, 150, 150)
                                                 )
                                               )
                                             ),
@@ -1148,49 +1420,20 @@ class _MyHomePageState extends State<MyHomePage> {
                                               )
                                             ),
                                             foregroundColor: MaterialStateProperty.all<Color>(
-                                              removeGlassesBtnColor
+                                              Color.fromARGB(255, 150, 150, 150)
                                             )
                                           )
-                                        ),
-                                        margin: EdgeInsets.all(
-                                          15
                                         )
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          addGlass();
-                                        },
-                                        child: Icon(
-                                            Icons.add
-                                        ),
-                                        style: ButtonStyle(
-                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                            RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(100.0),
-                                              side: BorderSide(
-                                                color: Color.fromARGB(255, 150, 150, 150)
-                                              )
-                                            )
-                                          ),
-                                          fixedSize: MaterialStateProperty.all<Size>(
-                                            Size(
-                                              45.0,
-                                              45.0
-                                            )
-                                          ),
-                                          foregroundColor: MaterialStateProperty.all<Color>(
-                                            Color.fromARGB(255, 150, 150, 150)
-                                          )
-                                        )
-                                      )
-                                    ]
-                                  )
-                                ]
-                            )
-                          ]
+                                      ]
+                                    )
+                                  ]
+                              )
+                            ]
+                          )
                         )
                       )
-                    )
+                    :
+                      Row()
                   ]
                 )
               )
@@ -9115,6 +9358,843 @@ class _RecordBodyActivityState extends State<RecordBodyActivity> {
           ]
         )
       ],
+    );
+  }
+}
+
+class SettingsActivity extends StatefulWidget {
+
+  const SettingsActivity({Key? key}) : super(key: key);
+
+  @override
+  State<SettingsActivity> createState() => _SettingsActivityState();
+
+}
+
+class _SettingsActivityState extends State<SettingsActivity> {
+
+  late DatabaseHandler handler;
+
+  @override
+  initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Настройки Softtrack Здоровье'
+        )
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Softtrack аккаунт',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              '**********@gmail.com',
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
+                            ),
+                            Divider(
+                              thickness: 1,
+                              color: Color.fromARGB(255, 0, 0, 0)
+                            )
+                          ]
+                        )
+                      ]
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Синхронизация с Softtrack Здоровье',
+                                  style: TextStyle(
+                                    fontSize: 18
+                                  )
+                                ),
+                                Text(
+                                  'Включите, чтобы завершить\nвосстановление данных.',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 0, 200, 0)
+                                  )
+                                ),
+                                Divider(
+                                  thickness: 1,
+                                  color: Color.fromARGB(255, 0, 0, 0)
+                                )
+                              ]
+                            ),
+                            Switch(
+                              onChanged: (value) {
+
+                              },
+                              value: false
+                            )
+                          ]
+                        )
+                      ]
+                    ),
+                  ]
+                )
+              ),
+              Text(
+                'Общие',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 175, 175, 175)
+                )
+              ),
+              Container(
+                  padding: EdgeInsets.all(
+                    15
+                  ),
+                  margin: EdgeInsets.symmetric(
+                    vertical: 15
+                  ),
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 255, 255, 255)
+                  ),
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        child: Row(
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Единицы измерения',
+                                  style: TextStyle(
+                                    fontSize: 18
+                                  )
+                                ),
+                                Divider(
+                                  thickness: 1,
+                                  color: Color.fromARGB(255, 0, 0, 0)
+                                )
+                              ]
+                            )
+                          ]
+                        ),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/settings/general/measure');
+                        }
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'Макретинговые уведомления',
+                                    style: TextStyle(
+                                      fontSize: 18
+                                    )
+                                  ),
+                                  Text(
+                                    'Получение уведомлений от Softtrack\nЗдоровье.',
+                                    style: TextStyle(
+                                      color: Color.fromARGB(255, 175, 175, 175)
+                                    )
+                                  ),
+                                  Divider(
+                                      thickness: 1,
+                                      color: Color.fromARGB(255, 0, 0, 0)
+                                  )
+                                ]
+                              ),
+                              Switch(
+                                onChanged: (value) {
+
+                                },
+                                value: false
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                children: [
+                                Text(
+                                  'Подключенные службы',
+                                  style: TextStyle(
+                                    fontSize: 18
+                                  )
+                                ),
+                                Text(
+                                  'Синхронизация данных Softtrack Здоровье с учетными\nзаписямисторонних веб-сервисов',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 175, 175, 175)
+                                  )
+                                ),
+                                Divider(
+                                  thickness: 1,
+                                  color: Color.fromARGB(255, 0, 0, 0)
+                                )
+                              ]
+                            )
+                         ]
+                        )
+                      ]
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Служба персонализации',
+                                  style: TextStyle(
+                                    fontSize: 18
+                                  )
+                                ),
+                                Text(
+                                  'Получайте персонализированное содержимое с\nучетом характера использования телефона',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 175, 175, 175)
+                                  )
+                                ),
+                                Text(
+                                  'Включено',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 0, 200, 0)
+                                  )
+                                ),
+                                Divider(
+                                  thickness: 1,
+                                  color: Color.fromARGB(255, 0, 0, 0)
+                                )
+                              ]
+                            )
+                          ]
+                        )
+                      ]
+                    )
+                  ]
+                )
+              ),
+              Text(
+                'Together',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 175, 175, 175)
+                )
+              ),
+              Container(
+                  padding: EdgeInsets.all(
+                      15
+                  ),
+                  margin: EdgeInsets.symmetric(
+                      vertical: 15
+                  ),
+                  decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                  ),
+                  child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Получать приглашения от',
+                                  style: TextStyle(
+                                    fontSize: 18
+                                  )
+                                ),
+                                Text(
+                                  'Друзья',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 0, 200, 0)
+                                  )
+                                ),
+                                Divider(
+                                  thickness: 1,
+                                  color: Color.fromARGB(255, 0, 0, 0)
+                                )
+                              ]
+                            ),
+                          ]
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                                'Поиск друзей и управление',
+                                style: TextStyle(
+                                    fontSize: 18
+                                )
+                            )
+                          ]
+                        )
+                      ]
+                  )
+              ),
+              Text(
+                'Дополнительно',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 175, 175, 175)
+                )
+              ),
+              Container(
+                  padding: EdgeInsets.all(
+                      15
+                  ),
+                  margin: EdgeInsets.symmetric(
+                      vertical: 15
+                  ),
+                  decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'Автоопределение тренировок',
+                                    style: TextStyle(
+                                      fontSize: 18
+                                    )
+                                  ),
+                                  Divider(
+                                    thickness: 1,
+                                    color: Color.fromARGB(255, 0, 0, 0)
+                                  )
+                                ]
+                              ),
+                              Switch(
+                                onChanged: (value) {
+
+                                },
+                                value: false
+                              )
+                            ]
+                          )
+                        ]
+                      ),
+                    ]
+                  )
+              ),
+              Text(
+                'Конциденциальность',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 175, 175, 175)
+                )
+              ),
+              Container(
+                  padding: EdgeInsets.all(
+                      15
+                  ),
+                  margin: EdgeInsets.symmetric(
+                      vertical: 15
+                  ),
+                  decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                  ),
+                  child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Уведомление о конфиденциальности',
+                                  style: TextStyle(
+                                    fontSize: 18
+                                  )
+                                ),
+                                Divider(
+                                  thickness: 1,
+                                  color: Color.fromARGB(255, 0, 0, 0)
+                                )
+                              ]
+                            )
+                          ]
+                        ),
+                        Row(
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Разрешения на доступ к данным',
+                                  style: TextStyle(
+                                    fontSize: 18
+                                  )
+                                ),
+                                Text(
+                                  'Разрешите функциям Softtrack Здоровье и\nсторонним приложениям считывать и записывать\nопределенную информацию',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 175, 175, 175)
+                                  )
+                                ),
+                                Divider(
+                                  thickness: 1,
+                                  color: Color.fromARGB(255, 0, 0, 0)
+                                )
+                              ]
+                            )
+                          ]
+                        ),
+                        GestureDetector(
+                          child: Row(
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'Номер телефона',
+                                    style: TextStyle(
+                                      fontSize: 18
+                                    )
+                                  ),
+                                  Divider(
+                                    thickness: 1,
+                                    color: Color.fromARGB(255, 0, 0, 0)
+                                  )
+                                ]
+                              )
+                            ]
+                          ),
+                          onTap: () {
+                            Navigator.pushNamed(context, '/settings/privacy/phone');
+                          }
+                        ),
+                        Row(
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Загрузка личных данных',
+                                  style: TextStyle(
+                                    fontSize: 18
+                                  )
+                                ),
+                                Divider(
+                                  thickness: 1,
+                                  color: Color.fromARGB(255, 0, 0, 0)
+                                )
+                              ]
+                            )
+                          ]
+                        ),
+                        Row(
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                  'Удаление личных данных',
+                                  style: TextStyle(
+                                    fontSize: 18
+                                  )
+                                ),
+                                Divider(
+                                  thickness: 1,
+                                  color: Color.fromARGB(255, 0, 0, 0)
+                                )
+                              ]
+                            )
+                          ]
+                        ),
+                      ]
+                  )
+              ),
+              Text(
+                  'Информация',
+                  style: TextStyle(
+                      color: Color.fromARGB(255, 175, 175, 175)
+                  )
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'О Softtrack Здоровье',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Divider(
+                              thickness: 1,
+                              color: Color.fromARGB(255, 0, 0, 0)
+                            )
+                          ]
+                        )
+                      ]
+                    ),
+                    Row(
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              'Свяжитесь с нами',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Divider(
+                              thickness: 1,
+                              color: Color.fromARGB(255, 0, 0, 0)
+                            )
+                          ]
+                        )
+                      ]
+                    )
+                  ]
+                )
+              ),
+            ]
+          )
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225)
+    );
+  }
+
+}
+
+class SettingsPrivacyPhoneActivity extends StatefulWidget {
+
+  const SettingsPrivacyPhoneActivity({Key? key}) : super(key: key);
+
+  @override
+  State<SettingsPrivacyPhoneActivity> createState() => _SettingsPrivacyPhoneActivityState();
+
+}
+
+class _SettingsPrivacyPhoneActivityState extends State<SettingsPrivacyPhoneActivity> {
+
+  String phoneNumber = '99999999999';
+
+  Future<void> initMobileNumberState() async {
+    if (!await MobileNumber.hasPhonePermission) {
+      await MobileNumber.requestPhonePermission;
+      return;
+    }
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      phoneNumber = (await MobileNumber.mobileNumber)!;
+      print('phoneNumber: ${phoneNumber}');
+    } on PlatformException catch (e) {
+      debugPrint("Failed to get mobile number because of '${e.message}'");
+    }
+  }
+
+  @override
+  initState() {
+    super.initState();
+    MobileNumber.listenPhonePermission((isPermissionGranted) {
+      if (isPermissionGranted) {
+        initMobileNumberState();
+      }
+    });
+    initMobileNumberState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      appBar: AppBar(
+        title: Text(
+          'Номер телефона'
+        )
+      ),
+      body: Column(
+        children: [
+          Text(
+            'Приложение Softtrack Здоровье используе\n ваш номер телефона, чтобы помочь друзьям\nнаходить вас и приглашать в соревнования.'
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Column(
+              children: [
+                Text(
+                  phoneNumber,
+                  style: TextStyle(
+                    fontSize: 28
+                  )
+                ),
+                Text(
+                  'Этот номеер можно изменить в разделе\n\"Двухэтапная проверка\" в Softtrack аккаунт.'
+                ),
+                Text(
+                  'Softtrack аккаунт',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold
+                  )
+                )
+              ]
+            ),
+            padding: EdgeInsets.all(
+              15
+            ),
+            margin: EdgeInsets.symmetric(
+              vertical: 15
+            )
+          )
+        ]
+      )
+    );
+  }
+}
+
+class SettingsGeneralMeasureActivity extends StatefulWidget {
+
+  const SettingsGeneralMeasureActivity({Key? key}) : super(key: key);
+
+  @override
+  State<SettingsGeneralMeasureActivity> createState() => _SettingsGeneralMeasureActivityState();
+
+}
+
+class _SettingsGeneralMeasureActivityState extends State<SettingsGeneralMeasureActivity> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        backgroundColor: Color.fromARGB(255, 225, 225, 225),
+        appBar: AppBar(
+          title: Text(
+            'Единицы измерения'
+          )
+        ),
+        body: Column(
+          children: [
+            Text(
+              'Приложение Softtrack Здоровье используе\n ваш номер телефона, чтобы помочь друзьям\nнаходить вас и приглашать в соревнования.'
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 255, 255, 255)
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Рост',
+                            style: TextStyle(
+                              fontSize: 18
+                            )
+                          ),
+                          Text(
+                            'cм',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 200, 0)
+                            )
+                          ),
+                        ]
+                      )
+                    ]
+                  ),
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Вес',
+                            style: TextStyle(
+                              fontSize: 18
+                            )
+                          ),
+                          Text(
+                            'кг',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 200, 0)
+                            )
+                          ),
+                        ]
+                      )
+                    ]
+                  ),
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Температура',
+                            style: TextStyle(
+                              fontSize: 18
+                            )
+                          ),
+                          Text(
+                            '°C',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 200, 0)
+                            )
+                          )
+                        ]
+                      )
+                    ]
+                  ),
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Расстояние',
+                            style: TextStyle(
+                              fontSize: 18
+                            )
+                          ),
+                          Text(
+                            'км',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 200, 0)
+                            )
+                          ),
+                        ]
+                      )
+                    ]
+                  ),
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Сахар крови',
+                            style: TextStyle(
+                              fontSize: 18
+                            )
+                          ),
+                          Text(
+                            'ммоль/л',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 200, 0)
+                            )
+                          ),
+                        ]
+                      )
+                    ]
+                  ),
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Кровянное давление',
+                            style: TextStyle(
+                              fontSize: 18
+                            )
+                          ),
+                          Text(
+                            'мм. рт. ст.',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 200, 0)
+                            )
+                          ),
+                        ]
+                      )
+                    ]
+                  ),
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'HbA1c',
+                            style: TextStyle(
+                              fontSize: 18
+                            )
+                          ),
+                          Text(
+                            '%',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 200, 0)
+                            )
+                          ),
+                        ]
+                      )
+                    ]
+                  ),
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Объем выпиваемой воды',
+                            style: TextStyle(
+                              fontSize: 18
+                            )
+                          ),
+                          Text(
+                            'мл',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 0, 200, 0)
+                            )
+                          ),
+                        ]
+                      )
+                    ]
+                  )
+                ]
+              ),
+              padding: EdgeInsets.all(
+                15
+              ),
+              margin: EdgeInsets.symmetric(
+                vertical: 15
+              ),
+            )
+          ]
+        )
     );
   }
 }

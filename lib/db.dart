@@ -70,6 +70,15 @@ class DatabaseHandler {
             await database.execute("INSERT INTO \"exercises\"(is_activated, name, logo, is_favorite) VALUES (0, \"Плавание\", 0, 0);");
             await database.execute("INSERT INTO \"exercises\"(is_activated, name, logo, is_favorite) VALUES (0, \"Йога\", 0, 0);");
 
+            await database.execute("DELETE FROM \"controllers\";");
+            await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"active\");");
+            await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"walk\");");
+            await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"exercise\");");
+            await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"food\");");
+            await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"sleep\");");
+            await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"body\");");
+            await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"water\");");
+
           }
         });
       },
@@ -310,6 +319,27 @@ class DatabaseHandler {
       where: 'id = ?',
       whereArgs: [id]
     );
+  }
+
+  Future<void> updateIsActivatedController(String name, int isActivated) async {
+    final db = await initializeDB();
+    Map<String, dynamic> values = Map<String, dynamic>();
+    values = {
+      'is_activated': isActivated
+    };
+    await db.update(
+        'controllers',
+        values,
+        where: 'name = ?',
+        whereArgs: [name]
+    );
+  }
+
+  Future<List<Controller>> retrieveControllers() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('controllers');
+    var returnedControllers = queryResult.map((e) => Controller.fromMap(e)).toList();
+    return returnedControllers;
   }
 
 }
