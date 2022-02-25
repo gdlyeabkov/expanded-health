@@ -1,4 +1,5 @@
 import 'dart:async';
+// import 'dart:html';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ import 'package:latlong2/latlong.dart' as latLng;
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:mobile_number/mobile_number.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'db.dart';
 import 'models.dart';
@@ -71,6 +73,10 @@ class MyApp extends StatelessWidget {
         '/awards/category': (context) => const AwardsCategoryActivity(),
         '/awards': (context) => const AwardsActivity(),
         '/award': (context) => const AwardActivity(),
+        '/about': (context) => const AboutActivity(),
+        '/data/remove': (context) => const RemovePersonalDataActivity(),
+        '/data/upload': (context) => const UploadPersonalDataActivity(),
+        '/data/permission': (context) => const PermissionDataActivity(),
       }
     );
   }
@@ -9882,6 +9888,28 @@ class _SettingsActivityState extends State<SettingsActivity> {
 
   late DatabaseHandler handler;
 
+  getFeedback(context) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Ошибка сети'),
+        content: Container(
+          child: Text(
+            'Проверьте подключение к сети и\nповторите попытку.'
+          )
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              return Navigator.pop(context, 'Ok');
+            },
+            child: const Text('ОК')
+          )
+        ]
+      )
+    );
+  }
+
   @override
   initState() {
     super.initState();
@@ -10242,47 +10270,60 @@ class _SettingsActivityState extends State<SettingsActivity> {
                   ),
                   child: Column(
                       children: [
-                        Row(
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                  'Уведомление о конфиденциальности',
-                                  style: TextStyle(
-                                    fontSize: 18
+                        GestureDetector(
+                          child: Row(
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'Уведомление о конфиденциальности',
+                                    style: TextStyle(
+                                      fontSize: 18
+                                    )
+                                  ),
+                                  Divider(
+                                    thickness: 1,
+                                    color: Color.fromARGB(255, 0, 0, 0)
                                   )
-                                ),
-                                Divider(
-                                  thickness: 1,
-                                  color: Color.fromARGB(255, 0, 0, 0)
-                                )
-                              ]
-                            )
-                          ]
+                                ]
+                              )
+                            ]
+                          ),
+                          onTap: () async {
+                            final String url = 'https://samsunghealth.com/privacy?lc=ru&cc=RU&scv=6202017&platform=1&fqdn=samsunghealth.settings&source=2';
+                            // window.open(url, 'name');
+                            if (await canLaunch(url))
+                              await launch(url);
+                          }
                         ),
-                        Row(
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                  'Разрешения на доступ к данным',
-                                  style: TextStyle(
-                                    fontSize: 18
+                        GestureDetector(
+                          child: Row(
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'Разрешения на доступ к данным',
+                                    style: TextStyle(
+                                      fontSize: 18
+                                    )
+                                  ),
+                                  Text(
+                                    'Разрешите функциям Softtrack Здоровье и\nсторонним приложениям считывать и записывать\nопределенную информацию',
+                                    style: TextStyle(
+                                      color: Color.fromARGB(255, 175, 175, 175)
+                                    )
+                                  ),
+                                  Divider(
+                                    thickness: 1,
+                                    color: Color.fromARGB(255, 0, 0, 0)
                                   )
-                                ),
-                                Text(
-                                  'Разрешите функциям Softtrack Здоровье и\nсторонним приложениям считывать и записывать\nопределенную информацию',
-                                  style: TextStyle(
-                                    color: Color.fromARGB(255, 175, 175, 175)
-                                  )
-                                ),
-                                Divider(
-                                  thickness: 1,
-                                  color: Color.fromARGB(255, 0, 0, 0)
-                                )
-                              ]
-                            )
-                          ]
+                                ]
+                              )
+                            ]
+                          ),
+                          onTap: () {
+                            Navigator.pushNamed(context, '/data/permission');
+                          }
                         ),
                         GestureDetector(
                           child: Row(
@@ -10307,41 +10348,51 @@ class _SettingsActivityState extends State<SettingsActivity> {
                             Navigator.pushNamed(context, '/settings/privacy/phone');
                           }
                         ),
-                        Row(
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                  'Загрузка личных данных',
-                                  style: TextStyle(
-                                    fontSize: 18
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/data/upload');
+                          },
+                          child: Row(
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'Загрузка личных данных',
+                                    style: TextStyle(
+                                      fontSize: 18
+                                    )
+                                  ),
+                                  Divider(
+                                    thickness: 1,
+                                    color: Color.fromARGB(255, 0, 0, 0)
                                   )
-                                ),
-                                Divider(
-                                  thickness: 1,
-                                  color: Color.fromARGB(255, 0, 0, 0)
-                                )
-                              ]
-                            )
-                          ]
+                                ]
+                              )
+                            ]
+                          )
                         ),
-                        Row(
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                  'Удаление личных данных',
-                                  style: TextStyle(
-                                    fontSize: 18
+                        GestureDetector(
+                          child: Row(
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'Удаление личных данных',
+                                    style: TextStyle(
+                                      fontSize: 18
+                                    )
+                                  ),
+                                  Divider(
+                                    thickness: 1,
+                                    color: Color.fromARGB(255, 0, 0, 0)
                                   )
-                                ),
-                                Divider(
-                                  thickness: 1,
-                                  color: Color.fromARGB(255, 0, 0, 0)
-                                )
-                              ]
-                            )
-                          ]
+                                ]
+                              )
+                            ]
+                          ),
+                          onTap: () {
+                            Navigator.pushNamed(context, '/data/remove');
+                          }
                         ),
                       ]
                   )
@@ -10364,41 +10415,51 @@ class _SettingsActivityState extends State<SettingsActivity> {
                 ),
                 child: Column(
                   children: [
-                    Row(
-                      children: [
-                        Column(
-                          children: [
-                            Text(
-                              'О Softtrack Здоровье',
-                              style: TextStyle(
-                                fontSize: 18
+                    GestureDetector(
+                      child: Row(
+                        children: [
+                          Column(
+                            children: [
+                              Text(
+                                'О Softtrack Здоровье',
+                                style: TextStyle(
+                                  fontSize: 18
+                                )
+                              ),
+                              Divider(
+                                thickness: 1,
+                                color: Color.fromARGB(255, 0, 0, 0)
                               )
-                            ),
-                            Divider(
-                              thickness: 1,
-                              color: Color.fromARGB(255, 0, 0, 0)
-                            )
-                          ]
-                        )
-                      ]
+                            ]
+                          )
+                        ]
+                      ),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/about');
+                      }
                     ),
-                    Row(
-                      children: [
-                        Column(
-                          children: [
-                            Text(
-                              'Свяжитесь с нами',
-                              style: TextStyle(
-                                fontSize: 18
+                    GestureDetector(
+                      child: Row(
+                        children: [
+                          Column(
+                            children: [
+                              Text(
+                                'Свяжитесь с нами',
+                                style: TextStyle(
+                                  fontSize: 18
+                                )
+                              ),
+                              Divider(
+                                thickness: 1,
+                                color: Color.fromARGB(255, 0, 0, 0)
                               )
-                            ),
-                            Divider(
-                              thickness: 1,
-                              color: Color.fromARGB(255, 0, 0, 0)
-                            )
-                          ]
-                        )
-                      ]
+                            ]
+                          )
+                        ]
+                      ),
+                      onTap: () {
+                        getFeedback(context);
+                      }
                     )
                   ]
                 )
@@ -11763,4 +11824,473 @@ class _AwardActivityState extends State<AwardActivity> {
       )
     );
   }
+}
+
+class AboutActivity extends StatefulWidget {
+
+  const AboutActivity({Key? key}) : super(key: key);
+
+  @override
+  State<AboutActivity> createState() => _AboutActivityState();
+
+}
+
+class _AboutActivityState extends State<AboutActivity> {
+
+  @override
+  initState() {
+    super.initState();
+  }
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          FlatButton(
+            child: Icon(
+              Icons.info,
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            onPressed: () {
+
+            }
+          )
+        ],
+      ),
+      body: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              children: [
+                Text(
+                  'Softtrack Здоровье',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24
+                  )
+                ),
+                Text(
+                  'Версия 6.20.2.17',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color.fromARGB(255, 175, 175, 175)
+                  )
+                ),
+                Text(
+                  'Не удалось проверить наличие обновлений.\nПовторите попытку позже',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color.fromARGB(255, 175, 175, 175)
+                  )
+                ),
+                TextButton(
+                  child: Text(
+                    'Повторить'
+                  ),
+                  style: ButtonStyle(
+                    foregroundColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 255, 255, 255)
+                    ),
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                      Color.fromARGB(255, 0, 150, 0)
+                    ),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100.0),
+                        side: BorderSide(
+                          color: Color.fromARGB(255, 150, 150, 150)
+                        )
+                      )
+                    ),
+                    fixedSize: MaterialStateProperty.all<Size>(
+                      Size(
+                        175.0,
+                        45.0
+                      )
+                    )
+                  ),
+                  onPressed: () {
+
+                  }
+                )
+              ]
+            ),
+            Column(
+              children: [
+                TextButton(
+                  child: Text(
+                    'Условия использования',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold
+                    ),
+                    textAlign: TextAlign.center
+                  ),
+                  style: ButtonStyle(
+                    foregroundColor: MaterialStateProperty.all<Color>(
+                      Color.fromARGB(255, 0, 0, 0)
+                    ),
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                      Color.fromARGB(255, 150, 150, 150)
+                    ),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100.0),
+                        side: BorderSide(
+                          color: Color.fromARGB(255, 150, 150, 150)
+                        )
+                      )
+                    ),
+                    fixedSize: MaterialStateProperty.all<Size>(
+                      Size(
+                        200.0,
+                        45.0
+                      )
+                    )
+                  ),
+                  onPressed: () {
+
+                  }
+                ),
+                TextButton(
+                    child: Text(
+                        'Уведомление о конфиденциальности',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold
+                        ),
+                        textAlign: TextAlign.center
+                    ),
+                    style: ButtonStyle(
+                        foregroundColor: MaterialStateProperty.all<Color>(
+                            Color.fromARGB(255, 0, 0, 0)
+                        ),
+                        backgroundColor: MaterialStateProperty.all<Color>(
+                            Color.fromARGB(255, 150, 150, 150)
+                        ),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100.0),
+                                side: BorderSide(
+                                    color: Color.fromARGB(255, 150, 150, 150)
+                                )
+                            )
+                        ),
+                        fixedSize: MaterialStateProperty.all<Size>(
+                            Size(
+                                200.0,
+                                65.0
+                            )
+                        )
+                    ),
+                    onPressed: () {
+
+                    }
+                ),
+                TextButton(
+                    child: Text(
+                        'Лицензии открытого ПО',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold
+                        ),
+                        textAlign: TextAlign.center
+                    ),
+                    style: ButtonStyle(
+                        foregroundColor: MaterialStateProperty.all<Color>(
+                            Color.fromARGB(255, 0, 0, 0)
+                        ),
+                        backgroundColor: MaterialStateProperty.all<Color>(
+                            Color.fromARGB(255, 150, 150, 150)
+                        ),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100.0),
+                                side: BorderSide(
+                                    color: Color.fromARGB(255, 150, 150, 150)
+                                )
+                            )
+                        ),
+                        fixedSize: MaterialStateProperty.all<Size>(
+                            Size(
+                                200.0,
+                                45.0
+                            )
+                        )
+                    ),
+                    onPressed: () {
+
+                    }
+                ),
+              ]
+            )
+          ]
+        )
+        ]
+      )
+    );
+  }
+
+}
+
+class RemovePersonalDataActivity extends StatefulWidget {
+
+  const RemovePersonalDataActivity({Key? key}) : super(key: key);
+
+  @override
+  State<RemovePersonalDataActivity> createState() => _RemovePersonalDataActivityState();
+
+}
+
+class _RemovePersonalDataActivityState extends State<RemovePersonalDataActivity> {
+
+  @override
+  initState() {
+    super.initState();
+  }
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Удаление личных данных'
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            padding: EdgeInsets.all(
+              15
+            ),
+            margin: EdgeInsets.all(
+              15
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Text(
+              'Коснитесь кнопки ниже, чтобы стереть данные\nприложения Softtrack Здоровье. Удаление\nнекоторых данных может быть невозможно,\nесли их необходимо хранить в соответствии\nс требованием законадательства. В этом случае\nони будут удалены сразу по истечении срока\nхранения..'
+            )
+          ),
+          TextButton(
+            child: Text(
+              'Удалить',
+              style: TextStyle(
+                fontWeight: FontWeight.bold
+              ),
+              textAlign: TextAlign.center
+            ),
+            style: ButtonStyle(
+              foregroundColor: MaterialStateProperty.all<Color>(
+                Color.fromARGB(255, 0, 0, 0)
+              ),
+              backgroundColor: MaterialStateProperty.all<Color>(
+                Color.fromARGB(255, 150, 150, 150)
+              ),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100.0),
+                  side: BorderSide(
+                    color: Color.fromARGB(255, 150, 150, 150)
+                  )
+                )
+              ),
+              fixedSize: MaterialStateProperty.all<Size>(
+                Size(
+                  200.0,
+                  45.0
+                )
+              )
+            ),
+            onPressed: () {
+
+            }
+          )
+        ]
+      )
+    );
+  }
+
+}
+
+class UploadPersonalDataActivity extends StatefulWidget {
+
+  const UploadPersonalDataActivity({Key? key}) : super(key: key);
+
+  @override
+  State<UploadPersonalDataActivity> createState() => _UploadPersonalDataActivityState();
+
+}
+
+class _UploadPersonalDataActivityState extends State<UploadPersonalDataActivity> {
+
+  @override
+  initState() {
+    super.initState();
+  }
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+            title: Text(
+                'Загрузка личных данных'
+            )
+        ),
+        backgroundColor: Color.fromARGB(255, 225, 225, 225),
+        body: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                  padding: EdgeInsets.all(
+                      15
+                  ),
+                  margin: EdgeInsets.all(
+                      15
+                  ),
+                  decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255)
+                  ),
+                  child: Text(
+                      'Нажмите на кнопку ниже, чтобы загрузить\nсвои персональные данные. Будут скачены\nперсональные данные, которые хранятся на вашем телефоне в сервисах Softtrack Здоровье.'
+                  )
+              ),
+              TextButton(
+                  child: Text(
+                      'Загрузить',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold
+                      ),
+                      textAlign: TextAlign.center
+                  ),
+                  style: ButtonStyle(
+                      foregroundColor: MaterialStateProperty.all<Color>(
+                          Color.fromARGB(255, 0, 0, 0)
+                      ),
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                          Color.fromARGB(255, 150, 150, 150)
+                      ),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100.0),
+                              side: BorderSide(
+                                  color: Color.fromARGB(255, 150, 150, 150)
+                              )
+                          )
+                      ),
+                      fixedSize: MaterialStateProperty.all<Size>(
+                          Size(
+                              200.0,
+                              45.0
+                          )
+                      )
+                  ),
+                  onPressed: () {
+
+                  }
+              )
+            ]
+        )
+    );
+  }
+
+}
+
+class PermissionDataActivity extends StatefulWidget {
+
+  const PermissionDataActivity({Key? key}) : super(key: key);
+
+  @override
+  State<PermissionDataActivity> createState() => _PermissionDataActivityState();
+
+}
+
+class _PermissionDataActivityState extends State<PermissionDataActivity> {
+
+  @override
+  initState() {
+    super.initState();
+  }
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Разрешения на доступ к данн...'
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(
+              'Доступ через приложения',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 150, 150, 150)
+              )
+            ),
+            Container(
+                width: MediaQuery.of(context).size.width,
+                height: 250,
+              padding: EdgeInsets.all(
+                15
+              ),
+              margin: EdgeInsets.all(
+                15
+              ),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 255, 255, 255)
+              ),
+              child: Text(
+                'Нет приложений',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 200, 200, 200),
+                  fontSize: 18
+                )
+              )
+            ),
+            Text(
+              'Доступ через сервер',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 150, 150, 150)
+              )
+            ),
+            Container(
+              width: MediaQuery.of(context).size.width,
+              height: 250,
+              padding: EdgeInsets.all(
+                15
+              ),
+              margin: EdgeInsets.all(
+                15
+              ),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 255, 255, 255)
+              ),
+              child: Text(
+                'Нет служб',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 200, 200, 200),
+                  fontSize: 18
+                )
+              )
+            ),
+          ]
+      )
+    );
+  }
+
 }
