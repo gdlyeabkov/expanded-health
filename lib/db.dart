@@ -34,34 +34,6 @@ class DatabaseHandler {
       },
       onOpen: (database) async {
         await database.execute(
-          "DELETE FROM \"measures\";"
-        );
-        await database.execute(
-          "INSERT INTO \"measures\"(name, value) VALUES (\"Рост\", \"см\");"
-        );
-        await database.execute(
-          "INSERT INTO \"measures\"(name, value) VALUES (\"Вес\", \"кг\");"
-        );
-        await database.execute(
-          "INSERT INTO \"measures\"(name, value) VALUES (\"Температура\", \"℃\");"
-        );
-        await database.execute(
-          "INSERT INTO \"measures\"(name, value) VALUES (\"Расстояние\", \"км\");"
-        );
-        await database.execute(
-          "INSERT INTO \"measures\"(name, value) VALUES (\"Сахар в крови\", \"мг/дл\");"
-        );
-        await database.execute(
-          "INSERT INTO \"measures\"(name, value) VALUES (\"Давление\", \"мм рт. ст.\");"
-        );
-        await database.execute(
-          "INSERT INTO \"measures\"(name, value) VALUES (\"HbA1c\", \"%\");"
-        );
-        await database.execute(
-          "INSERT INTO \"measures\"(name, value) VALUES (\"Вода\", \"мл\");"
-        );
-
-        await database.execute(
             "CREATE TABLE IF NOT EXISTS sleep_records(id INTEGER PRIMARY KEY, hours TEXT, minutes TEXT, date TEXT)"
         );
         await database.execute(
@@ -105,6 +77,34 @@ class DatabaseHandler {
             await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"sleep\");");
             await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"body\");");
             await database.execute("INSERT INTO \"controllers\"(is_activated, name) VALUES (1, \"water\");");
+
+            await database.execute(
+                "DELETE FROM \"measures\";"
+            );
+            await database.execute(
+                "INSERT INTO \"measures\"(name, value) VALUES (\"Рост\", \"см\");"
+            );
+            await database.execute(
+                "INSERT INTO \"measures\"(name, value) VALUES (\"Вес\", \"кг\");"
+            );
+            await database.execute(
+                "INSERT INTO \"measures\"(name, value) VALUES (\"Температура\", \"℃\");"
+            );
+            await database.execute(
+                "INSERT INTO \"measures\"(name, value) VALUES (\"Расстояние\", \"км\");"
+            );
+            await database.execute(
+                "INSERT INTO \"measures\"(name, value) VALUES (\"Сахар в крови\", \"мг/дл\");"
+            );
+            await database.execute(
+                "INSERT INTO \"measures\"(name, value) VALUES (\"Давление\", \"мм рт. ст.\");"
+            );
+            await database.execute(
+                "INSERT INTO \"measures\"(name, value) VALUES (\"HbA1c\", \"%\");"
+            );
+            await database.execute(
+                "INSERT INTO \"measures\"(name, value) VALUES (\"Вода\", \"мл\");"
+            );
 
           }
         });
@@ -166,13 +166,14 @@ class DatabaseHandler {
     );
   }
 
-  Future<void> updateAccountIndicators(String gender, double growth, double weight) async {
+  Future<void> updateAccountIndicators(String gender, double growth, double weight, String activityLevel) async {
     final db = await initializeDB();
     Map<String, dynamic> values = Map<String, dynamic>();
     values = {
       'gender': gender,
       'growth': growth,
-      'weight': weight
+      'weight': weight,
+      'level': activityLevel
     };
     int indicatorsId = 1;
     await db.update(
@@ -407,6 +408,32 @@ class DatabaseHandler {
     final List<Map<String, Object?>> queryResult = await db.query('controllers');
     var returnedControllers = queryResult.map((e) => Controller.fromMap(e)).toList();
     return returnedControllers;
+  }
+
+  Future<List<Award>> retrieveAwards() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('awards');
+    var returnedAwards = queryResult.map((e) => Award.fromMap(e)).toList();
+    return returnedAwards;
+  }
+
+  Future<int> insertAwards(List<Award> awards) async {
+    int result = 0;
+    final Database db = await initializeDB();
+    for(var award in awards){
+      result = await db.insert('awards', award.toMap());
+    }
+    return result;
+  }
+
+  Future<int> addNewAward(String name, String description, String type) async {
+    Award firstAward = Award(
+        name: name,
+        description: description,
+        type: type
+    );
+    List<Award> listOfAwards = [firstAward];
+    return await insertAwards(listOfAwards);
   }
 
 }

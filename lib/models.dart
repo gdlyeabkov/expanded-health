@@ -350,6 +350,37 @@ class Controller {
 
 }
 
+class Award {
+
+  final int? id;
+  final String name;
+  final String description;
+  final String type;
+
+  Award({
+    this.id,
+    required this.name,
+    required this.description,
+    required this.type
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'type': type
+    };
+  }
+
+  Award.fromMap(Map<String, dynamic> res)
+      : id = res["id"],
+        name = res["name"],
+        description = res["description"],
+        type = res["type"];
+
+}
+
 enum FoodType {
   none,
   breakfast,

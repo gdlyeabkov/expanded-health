@@ -67,7 +67,10 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => const SettingsActivity(),
         '/foryou': (context) => const ForYouActivity(),
         '/events': (context) => const EventsActivity(),
-        '/notifications': (context) => const NotificationsActivity()
+        '/notifications': (context) => const NotificationsActivity(),
+        '/awards/category': (context) => const AwardsCategoryActivity(),
+        '/awards': (context) => const AwardsActivity(),
+        '/award': (context) => const AwardActivity(),
       }
     );
   }
@@ -142,6 +145,30 @@ class _MyHomePageState extends State<MyHomePage> {
   String oneCharPrefix = '0';
   final String stopWatchTitleSeparator = ':';
   String exerciseStartTime = '00:00';
+  List<Widget> awards = [];
+  var weekDayLabels = <String, String>{
+    'Monday': 'пн',
+    'Tuesday': 'вт',
+    'Wednesday': 'ср',
+    'Thursday': 'чт',
+    'Friday': 'пт',
+    'Saturday': 'сб',
+    'Sunday': 'вс'
+  };
+  var monthsLabels = <int, String>{
+    0: 'янв.',
+    1: 'февр.',
+    2: 'мар.',
+    3: 'апр.',
+    4: 'мая',
+    5: 'июн.',
+    6: 'июл.',
+    7: 'авг.',
+    8: 'сен.',
+    9: 'окт.',
+    10: 'ноя.',
+    11: 'дек'
+  };
 
   void addGlass() {
     setState(() {
@@ -443,6 +470,59 @@ class _MyHomePageState extends State<MyHomePage> {
 
       });
     });
+  }
+
+  addAward(Award record, context) {
+    String awardName = record.name;
+    String awardDesc = record.description;
+    String awardType = record.type;
+    List<String> rawAwardDateTime = awardDesc.split(' ');
+    String rawAwardDate = rawAwardDateTime[0];
+    List<String> rawAwardDateParts = rawAwardDate.split('.');
+    String rawAwardDateDay = rawAwardDateParts[0];
+    String rawAwardDateMonth = rawAwardDateParts[1];
+    String rawAwardDateYear = rawAwardDateParts[2];
+    int awardDateMonth = int.parse(rawAwardDateMonth);
+    String awardDateMonthLabel = monthsLabels[awardDateMonth]!;
+    String correctAwardDateMonth = rawAwardDateMonth;
+    if (correctAwardDateMonth.length == 1) {
+      correctAwardDateMonth = '0${correctAwardDateMonth}';
+    }
+    DateTime pickedDate = DateTime.parse('${rawAwardDateYear}-${correctAwardDateMonth}-${rawAwardDateDay}');
+    String weekDayKey = DateFormat('EEEE').format(pickedDate);
+    String? weekDayLabel = weekDayLabels[weekDayKey];
+    String awardWeekDay = weekDayLabel!;
+    String awardDate = '${awardWeekDay}, ${rawAwardDateDay} ${awardDateMonthLabel}';
+    GestureDetector award = GestureDetector(
+      child: Column(
+        children: [
+          Image.network(
+            'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+            width: 75
+          ),
+          Text(
+            awardName,
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            awardDate,
+            textAlign: TextAlign.center,
+          ),
+        ]
+      ),
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          '/award',
+          arguments: {
+            'awardName': awardName,
+            'awardDate': awardDate,
+            'awardType': awardType
+          }
+        );
+      }
+    );
+    awards.add(award);
   }
 
   @override
@@ -4041,98 +4121,81 @@ class _MyHomePageState extends State<MyHomePage> {
                         ],
                       )
                     ),
-                    Container(
-                      margin: EdgeInsets.all(15.0),
-                      padding: EdgeInsets.all(15.0),
-                      decoration: BoxDecoration(
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        borderRadius: BorderRadius.circular(8)
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                'Значки',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 24
+                    GestureDetector(
+                      child: Container(
+                        margin: EdgeInsets.all(15.0),
+                        padding: EdgeInsets.all(15.0),
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(255, 255, 255, 255),
+                          borderRadius: BorderRadius.circular(8)
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Text(
+                                  'Значки',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 24
+                                  ),
                                 ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pushNamed(context, '/add_alarm');
-                                },
-                                child: Icon(
-                                  Icons.chevron_right
-                                ),
-                                style: ButtonStyle(
-                                  foregroundColor: MaterialStateProperty.all(
-                                    Color.fromARGB(255, 0, 0, 0)
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pushNamed(context, '/add_alarm');
+                                  },
+                                  child: Icon(
+                                    Icons.chevron_right
+                                  ),
+                                  style: ButtonStyle(
+                                    foregroundColor: MaterialStateProperty.all(
+                                      Color.fromARGB(255, 0, 0, 0)
+                                    )
                                   )
                                 )
-                              )
-                            ]
-                          ),
-                          SingleChildScrollView(
-                            child: Container(
-                              child: Row(
-                                children: [
-                                  Column(
+                              ]
+                            ),
+                            FutureBuilder(
+                              future: this.handler.retrieveAwards(),
+                              builder: (BuildContext context, AsyncSnapshot<List<Award>> snapshot) {
+                                int snapshotsCount = 0;
+                                if (snapshot.data != null) {
+                                  snapshotsCount = snapshot.data!.length;
+                                  awards = [];
+                                  for (int snapshotIndex = 0; snapshotIndex < snapshotsCount; snapshotIndex++) {
+                                    addAward(snapshot.data!.elementAt(snapshotIndex), context);
+                                  }
+                                }
+                                if (snapshot.hasData) {
+                                  return Column(
                                     children: [
-                                      Image.network(
-                                          'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
-                                          width: 75
-                                      ),
-                                      Text(
-                                        'Упражнение',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      Text(
-                                        '11 февр.',
-                                        textAlign: TextAlign.center,
-                                      ),
+                                      Container(
+                                        height: 250,
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            children: awards
+                                          )
+                                        )
+                                      )
                                     ]
-                                  ),
-                                  Column(
-                                    children: [
-                                      Image.network(
-                                          'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
-                                          width: 75
-                                      ),
-                                      Text(
-                                        'Упражнение',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      Text(
-                                        '11 февр.',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ]
-                                  ),
-                                  Column(
-                                    children: [
-                                      Image.network(
-                                          'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
-                                          width: 75
-                                      ),
-                                      Text(
-                                        'Упражнение',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      Text(
-                                        '11 февр.',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ]
-                                  )
-                                ],
-                              )
+                                  );
+                                } else {
+                                  return Column(
+
+                                  );
+                                }
+                                return Column(
+
+                                );
+                              }
                             )
-                          )
-                        ],
-                      )
+                          ],
+                        )
+                      ),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/awards');
+                      }
                     )
                   ]
                 )
@@ -7878,8 +7941,33 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
     int pickedDateMonth = pickedDate.month;
     int pickedDateYear = pickedDate.year;
     String rawDate = '${pickedDateDay}.${pickedDateMonth}.${pickedDateYear}';
-    handler.addNewExerciseRecord(exerciseType, rawDate, startTimerTitle);
     handler.updateExerciseIndicators(0, '00:00', exerciseType, startTimerTitle, false);
+    handler.retrieveExerciseRecords().then((value) {
+      List<String> rawCurrentDurationParts = startTimerTitle.split(stopWatchTitleSeparator);
+      int rawCurrentDurationHours = int.parse(rawCurrentDurationParts[0]);
+      int rawCurrentDurationMinutes = int.parse(rawCurrentDurationParts[1]);
+      int rawCurrentDurationSeconds = int.parse(rawCurrentDurationParts[2]);
+      int currentExerciseDuration = rawCurrentDurationSeconds + (rawCurrentDurationMinutes * 60) + (rawCurrentDurationHours * 60 * 60);
+      int exerciseCursorIndex = 0;
+      int countExercisesRecords = value.length;
+      for (ExerciseRecord exerciseRecord in value) {
+        String rawDuration = exerciseRecord.duration;
+        List<String> rawDurationParts = rawDuration.split(stopWatchTitleSeparator);
+        int rawDurationHours = int.parse(rawDurationParts[0]);
+        int rawDurationMinutes = int.parse(rawDurationParts[1]);
+        int rawDurationSeconds = int.parse(rawDurationParts[2]);
+        int exerciseDuration = rawDurationSeconds + (rawDurationMinutes * 60) + (rawDurationHours * 60 * 60);
+        if (currentExerciseDuration > exerciseDuration) {
+          exerciseCursorIndex++;
+        }
+      }
+      if (exerciseCursorIndex >= countExercisesRecords) {
+        String awardName = 'Самая большая длительность';
+        String awardDesc = '${rawDate} ${startTimerTitle}';
+        handler.addNewAward(awardName, awardDesc, exerciseType);
+      }
+      handler.addNewExerciseRecord(exerciseType, rawDate, startTimerTitle);
+    });
     Navigator.pushNamed(context, '/exercise/results');
   }
 
@@ -8590,6 +8678,8 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
   String realSelectedGrowthPart = '0';
   String imaginarySelectedGrowthPart = '0';
   Gender initialGender = Gender.none;
+  String realSelectedWeightPart = '0';
+  String imaginarySelectedWeightPart = '0';
 
   Future getImage() async {
     var image = await _picker.pickImage(source: ImageSource.gallery);
@@ -8747,41 +8837,89 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
         title: const Text('Рост'),
         content: Container(
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Container(
-                child: TextField(
-                  decoration: new InputDecoration.collapsed(
-                    hintText: '',
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        width: 1.0
-                      )
-                    )
-                  ),
-                  // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
-                  onChanged: (value) {
-                    setState(() {
-                      realSelectedGrowthPart = value;
-                    });
-                  }
+              SingleChildScrollView(
+                child: Container(
+                  height: 65,
+                  child: Column(
+                    children: [
+                      Text(
+                        '01'
+                      ),
+                      Text(
+                        '02'
+                      ),
+                      Text(
+                        '03'
+                      ),
+                      Text(
+                        '04'
+                      ),
+                      Text(
+                        '05'
+                      ),
+                      Text(
+                        '06'
+                      ),
+                      Text(
+                        '07'
+                      ),
+                      Text(
+                        '08'
+                      ),
+                      Text(
+                        '09'
+                      ),
+                      Text(
+                        '10'
+                      ),
+                    ]
+                  )
                 )
               ),
-              TextField(
-                decoration: new InputDecoration.collapsed(
-                  hintText: '',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      width: 1.0
-                    )
+              Text(
+                '.'
+              ),
+              SingleChildScrollView(
+                child: Container(
+                  height: 65,
+                  child: Column(
+                    children: [
+                      Text(
+                        '01'
+                      ),
+                      Text(
+                        '02'
+                      ),
+                      Text(
+                        '03'
+                      ),
+                      Text(
+                        '04'
+                      ),
+                      Text(
+                        '05'
+                      ),
+                      Text(
+                        '06'
+                      ),
+                      Text(
+                        '07'
+                      ),
+                      Text(
+                        '08'
+                      ),
+                      Text(
+                        '09'
+                      ),
+                      Text(
+                        '10'
+                      ),
+                    ]
                   )
-                ),
-                // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
-                onChanged: (value) {
-                  setState(() {
-                    imaginarySelectedGrowthPart = value;
-                  });
-                }
-              )
+                )
+              ),
             ]
           )
         ),
@@ -8789,7 +8927,8 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
           TextButton(
             onPressed: () {
               setState(() {
-                selectedGender = Gender.none;
+                realSelectedGrowthPart = '0';
+                imaginarySelectedGrowthPart = '0';
               });
               return Navigator.pop(context, 'Cancel');
             },
@@ -8797,7 +8936,8 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
           ),
           TextButton(
             onPressed: () {
-
+              realSelectedGrowthPart = '0';
+              imaginarySelectedGrowthPart = '0';
             },
             child: const Text('Готово')
           )
@@ -8807,7 +8947,119 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
   }
 
   setWeight(context) {
-
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Вес'),
+        content: Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              SingleChildScrollView(
+                child: Container(
+                  height: 65,
+                  child: Column(
+                    children: [
+                      Text(
+                        '01'
+                      ),
+                      Text(
+                        '02'
+                      ),
+                      Text(
+                        '03'
+                      ),
+                      Text(
+                        '04'
+                      ),
+                      Text(
+                        '05'
+                      ),
+                      Text(
+                        '06'
+                      ),
+                      Text(
+                        '07'
+                      ),
+                      Text(
+                        '08'
+                      ),
+                      Text(
+                        '09'
+                      ),
+                      Text(
+                        '10'
+                      ),
+                    ]
+                  )
+                )
+              ),
+              Text(
+                '.'
+              ),
+              SingleChildScrollView(
+                child: Container(
+                  height: 65,
+                  child: Column(
+                    children: [
+                      Text(
+                        '01'
+                      ),
+                      Text(
+                        '02'
+                      ),
+                      Text(
+                        '03'
+                      ),
+                      Text(
+                        '04'
+                      ),
+                      Text(
+                        '05'
+                      ),
+                      Text(
+                        '06'
+                      ),
+                      Text(
+                        '07'
+                      ),
+                      Text(
+                        '08'
+                      ),
+                      Text(
+                        '09'
+                      ),
+                      Text(
+                        '10'
+                      ),
+                    ]
+                  )
+                )
+              ),
+            ]
+          )
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              setState(() {
+                realSelectedWeightPart = '0';
+                imaginarySelectedWeightPart = '0';
+              });
+              return Navigator.pop(context, 'Cancel');
+            },
+            child: const Text('Отмена')
+          ),
+          TextButton(
+            onPressed: () {
+              realSelectedWeightPart = '0';
+              imaginarySelectedWeightPart = '0';
+            },
+            child: const Text('Готово')
+          )
+        ]
+      )
+    );
   }
 
   @override
@@ -8831,6 +9083,7 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
             }
             initialGender = gender;
             selectedGender = initialGender;
+            activityLevel = indicatorsItem.level;
           }
         });
       });
@@ -9059,23 +9312,28 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
                             ]
                           )
                         ),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.home
-                            ),
-                            Container(
-                              child: Text(
-                                '70 кг',
-                                style: TextStyle(
-                                  color: Color.fromARGB(255, 0, 200, 0)
-                                )
+                        GestureDetector(
+                          onTap: () {
+                            setWeight(context);
+                          },
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.home
                               ),
-                              margin: EdgeInsets.only(
-                                left: 15
+                              Container(
+                                child: Text(
+                                  '70 кг',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 0, 200, 0)
+                                  )
+                                ),
+                                margin: EdgeInsets.only(
+                                  left: 15
+                                )
                               )
-                            )
-                          ]
+                            ]
+                          )
                         ),
                         Row(
                           children: [
@@ -9302,7 +9560,7 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
                     }
                     double growth = 0.0;
                     double weight = 0.0;
-                    handler.updateAccountIndicators(gender, growth, weight);
+                    handler.updateAccountIndicators(gender, growth, weight, activityLevel);
                     Navigator.pushNamed(context, '/main');
                   }
                 });
@@ -10389,8 +10647,8 @@ class _SettingsGeneralMeasureActivityState extends State<SettingsGeneralMeasureA
                     itemBuilder: (BuildContext context) {
                       return tempContextMenuBtns.map((String choice) {
                         return PopupMenuItem<String>(
-                            value: choice,
-                            child: Text(choice)
+                          value: choice,
+                          child: Text(choice)
                         );
                       }).toList();
                     },
@@ -10703,6 +10961,804 @@ class _EventsActivityState extends State<EventsActivity> {
       body: Column(
         children: [
 
+        ]
+      )
+    );
+  }
+}
+
+class AwardsActivity extends StatefulWidget {
+
+  const AwardsActivity({Key? key}) : super(key: key);
+
+  @override
+  State<AwardsActivity> createState() => _AwardsActivityState();
+
+}
+
+class _AwardsActivityState extends State<AwardsActivity> {
+
+  late DatabaseHandler handler;
+  bool isAwardsExercisesExists = false;
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+        handler.retrieveAwards().then((value) {
+          for (Award award in value) {
+            String awardType = award.type;
+            bool isBycicleExerciseAward = awardType == 'Велоспорт';
+            bool isWalkExerciseAward = awardType == 'Ходьба';
+            bool isRunExerciseAward = awardType == 'Бег';
+            bool isCampExerciseAward = awardType == 'Поход';
+            bool isSwimExerciseAward = awardType == 'Плавание';
+            bool isYogaExerciseAward = awardType == 'Йога';
+            bool isAwardExercisesDetected = isBycicleExerciseAward || isWalkExerciseAward || isRunExerciseAward || isCampExerciseAward || isSwimExerciseAward || isYogaExerciseAward;
+            if (isAwardExercisesDetected) {
+              isAwardsExercisesExists = true;
+            }
+          }
+        });
+      });
+    });
+
+  }
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Значки'
+        ),
+        actions: [
+          FlatButton(
+            child: Icon(
+              Icons.calendar_today
+            ),
+            onPressed: () {
+              Navigator.pushNamed(context, '/exercise');
+            }
+          )
+        ]
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                    vertical: 15
+                ),
+                decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Шаги',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold
+                          ),
+                          textAlign: TextAlign.left
+                        )
+                      ]
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Цель достигнута',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Наибольшее колич.\nшагов',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        )
+                      ]
+                    )
+                  ]
+                )
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Пища',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold
+                          ),
+                          textAlign: TextAlign.left
+                        )
+                      ]
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Цель достигнута',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75,
+                              color: Color.fromARGB(0, 0, 0, 0)
+                            ),
+                            Text(
+                              '',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        )
+                      ]
+                    )
+                  ]
+                )
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Программы',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold
+                          ),
+                          textAlign: TextAlign.left
+                        )
+                      ]
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Идеально',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Отличная работа',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        )
+                      ]
+                    )
+                  ]
+                )
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.symmetric(
+                  vertical: 15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Упражнение',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold
+                          ),
+                          textAlign: TextAlign.left
+                        )
+                      ]
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Общее расстояние',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Общее расстояние',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        )
+                      ]
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        isAwardsExercisesExists ?
+                          GestureDetector(
+                            child: Column(
+                              children: [
+                                Image.network(
+                                  'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                                  width: 75,
+                                  height: 75
+                                ),
+                                Text(
+                                  'Записи',
+                                  textAlign: TextAlign.center
+                                ),
+                                Text(
+                                  '4 значка',
+                                  textAlign: TextAlign.center
+                                ),
+                                Text(
+                                  '11 февр.',
+                                  textAlign: TextAlign.center
+                                )
+                              ]
+                            ),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/awards/category',
+                                arguments: {
+                                  'category': 'Упражнение'
+                                }
+                              );
+                            }
+                          )
+                        :
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Записи',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75,
+                              color: Color.fromARGB(0, 0, 0 ,0)
+                            ),
+                            Text(
+                              'Общее расстояние',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color.fromARGB(0, 0, 0, 0)
+                              )
+                            )
+                          ]
+                        )
+                      ]
+                    )
+                  ]
+                )
+              ),
+              Container(
+                padding: EdgeInsets.all(
+                    15
+                ),
+                margin: EdgeInsets.symmetric(
+                    vertical: 15
+                ),
+                decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Сон',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold
+                          ),
+                          textAlign: TextAlign.left
+                        )
+                      ]
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Хорошее соблюдение\nрежима',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Хороший сон',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        )
+                      ]
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Пробуждение: вовремя',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        ),
+                        Column(
+                          children: [
+                            Image.network(
+                              'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                              width: 75,
+                              height: 75
+                            ),
+                            Text(
+                              'Отход ко сну: вовремя',
+                              textAlign: TextAlign.center
+                            )
+                          ]
+                        )
+                      ]
+                    ),
+                  ]
+                )
+              )
+            ]
+          )
+        )
+      )
+    );
+  }
+}
+
+class AwardsCategoryActivity extends StatefulWidget {
+
+  const AwardsCategoryActivity({Key? key}) : super(key: key);
+
+  @override
+  State<AwardsCategoryActivity> createState() => _AwardsCategoryActivityState();
+
+}
+
+class _AwardsCategoryActivityState extends State<AwardsCategoryActivity> {
+
+  late DatabaseHandler handler;
+  String category = '';
+  List<Widget> awards = [];
+  var weekDayLabels = <String, String>{
+    'Monday': 'пн',
+    'Tuesday': 'вт',
+    'Wednesday': 'ср',
+    'Thursday': 'чт',
+    'Friday': 'пт',
+    'Saturday': 'сб',
+    'Sunday': 'вс'
+  };
+  var monthsLabels = <int, String>{
+    0: 'янв.',
+    1: 'февр.',
+    2: 'мар.',
+    3: 'апр.',
+    4: 'мая',
+    5: 'июн.',
+    6: 'июл.',
+    7: 'авг.',
+    8: 'сен.',
+    9: 'окт.',
+    10: 'ноя.',
+    11: 'дек'
+  };
+
+  addAward(Award record, context) {
+    String awardName = record.name;
+    String awardDesc = record.description;
+    String awardType = record.type;
+    List<String> rawAwardDateTime = awardDesc.split(' ');
+    String rawAwardDate = rawAwardDateTime[0];
+    List<String> rawAwardDateParts = rawAwardDate.split('.');
+    String rawAwardDateDay = rawAwardDateParts[0];
+    String rawAwardDateMonth = rawAwardDateParts[1];
+    String rawAwardDateYear = rawAwardDateParts[2];
+    int awardDateMonth = int.parse(rawAwardDateMonth);
+    String awardDateMonthLabel = monthsLabels[awardDateMonth]!;
+    String correctAwardDateMonth = rawAwardDateMonth;
+    if (correctAwardDateMonth.length == 1) {
+      correctAwardDateMonth = '0${correctAwardDateMonth}';
+    }
+    DateTime pickedDate = DateTime.parse('${rawAwardDateYear}-${correctAwardDateMonth}-${rawAwardDateDay}');
+    String weekDayKey = DateFormat('EEEE').format(pickedDate);
+    String? weekDayLabel = weekDayLabels[weekDayKey];
+    String awardWeekDay = weekDayLabel!;
+    String awardDate = '${awardWeekDay}, ${rawAwardDateDay} ${awardDateMonthLabel}';
+    bool isBycicleExerciseAward = awardType == 'Велоспорт';
+    bool isWalkExerciseAward = awardType == 'Ходьба';
+    bool isRunExerciseAward = awardType == 'Бег';
+    bool isCampExerciseAward = awardType == 'Поход';
+    bool isSwimExerciseAward = awardType == 'Плавание';
+    bool isYogaExerciseAward = awardType == 'Йога';
+    bool isAwardExercisesDetected = isBycicleExerciseAward || isWalkExerciseAward || isRunExerciseAward || isCampExerciseAward || isSwimExerciseAward || isYogaExerciseAward;
+    bool isExerciseCategory = category == 'Упражнение';
+    bool isAwardExercises = isExerciseCategory && isAwardExercisesDetected;
+    bool isOutputAward = isAwardExercises || !isExerciseCategory;
+    if (isOutputAward) {
+      GestureDetector award = GestureDetector(
+        child: Column(
+          children: [
+            Image.network(
+                'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                width: 75
+            ),
+            Text(
+              awardName,
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              awardDate,
+              textAlign: TextAlign.center,
+            ),
+          ]
+        ),
+        onTap: () {
+          Navigator.pushNamed(
+            context,
+            '/award',
+            arguments: {
+              'awardName': awardName,
+              'awardDate': awardDate,
+              'awardType': awardType
+            }
+          );
+        }
+      );
+      awards.add(award);
+    }
+  }
+
+  @override
+  initState() {
+    super.initState();
+    this.handler = DatabaseHandler();
+    this.handler.initializeDB().whenComplete(() async {
+      setState(() {
+
+      });
+    });
+  }
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+
+    setState(() {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      if (arguments != null) {
+        print(arguments['category']);
+        category = arguments['category'];
+      }
+    });
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          category
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 255, 255, 255)
+              ),
+              padding: EdgeInsets.all(
+                25
+              ),
+              child: FutureBuilder(
+                future: this.handler.retrieveAwards(),
+                builder: (BuildContext context, AsyncSnapshot<List<Award>> snapshot) {
+                  int snapshotsCount = 0;
+                  if (snapshot.data != null) {
+                    snapshotsCount = snapshot.data!.length;
+                    awards = [];
+                    for (int snapshotIndex = 0; snapshotIndex < snapshotsCount; snapshotIndex++) {
+                      addAward(snapshot.data!.elementAt(snapshotIndex), context);
+                    }
+                  }
+                  if (snapshot.hasData) {
+                    return Column(
+                      children: [
+                        Container(
+                          height: 165,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: awards
+                            )
+                          )
+                        )
+                      ]
+                    );
+                  } else {
+                    return Row(
+
+                    );
+                  }
+                  return Column(
+
+                  );
+                }
+              )
+              /*Row(
+                children: [
+                  Column(
+                    children: [
+                      Image.network(
+                          'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+                          width: 75
+                      ),
+                      Text(
+                        'awardName',
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        'awardDate',
+                        textAlign: TextAlign.center,
+                      )
+                    ]
+                  )
+                ]
+              )*/
+            )
+          )
+        ]
+      )
+    );
+  }
+}
+
+class AwardActivity extends StatefulWidget {
+
+  const AwardActivity({Key? key}) : super(key: key);
+
+  @override
+  State<AwardActivity> createState() => _AwardActivityState();
+
+}
+
+class _AwardActivityState extends State<AwardActivity> {
+
+  String awardName = '';
+  String awardDate = '';
+  String awardType = '';
+
+  @override
+  initState() {
+    super.initState();
+  }
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+
+    setState(() {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      if (arguments != null) {
+        print(arguments['awardName']);
+        print(arguments['awardDate']);
+        awardName = arguments['awardName'];
+        awardDate = arguments['awardDate'];
+        awardType = arguments['awardType'];
+      }
+    });
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Награды'
+        ),
+        actions: [
+          FlatButton(
+            child: Icon(
+              Icons.share
+            ),
+            onPressed: () {
+
+            }
+          )
+        ]
+      ),
+      body: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Icon(
+                Icons.chevron_left
+              ),
+              Text(
+                awardDate
+              ),
+              Icon(
+                Icons.chevron_right
+              )
+            ]
+          ),
+          Text(
+            awardType,
+            style: TextStyle(
+              color: Color.fromARGB(255, 0, 150, 0)
+            )
+          ),
+          Text(
+            awardName,
+            style: TextStyle(
+              fontSize: 24
+            ),
+            textAlign: TextAlign.center
+          ),
+          Image.network(
+            'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
+            width: 125
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '3254',
+                style: TextStyle(
+                  fontSize: 24,
+                  color: Color.fromARGB(255, 0, 150, 0)
+                )
+              ),
+              Container(
+                child: Text(
+                  ' ккал',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 0, 150, 0)
+                  )
+                ),
+                margin: EdgeInsets.only(
+                  left: 5
+                )
+              )
+            ]
+          ),
+          Text(
+            'Невероятно вы установили новый рекорд,\nсбросив на 2953 ккал больше веса по\nсравнению с предыдущим рекордом.'
+          ),
+          Container(
+
+          )
         ]
       )
     );
