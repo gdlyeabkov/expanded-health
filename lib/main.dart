@@ -77,6 +77,10 @@ class MyApp extends StatelessWidget {
         '/data/remove': (context) => const RemovePersonalDataActivity(),
         '/data/upload': (context) => const UploadPersonalDataActivity(),
         '/data/permission': (context) => const PermissionDataActivity(),
+        '/sync': (context) => const SyncActivity(),
+        '/services': (context) => const ConnectedServicesActivity(),
+        '/friends': (context) => const FriendsSearchActivity(),
+        '/auto': (context) => const ExerciseAutoDefinitionActivity()
       }
     );
   }
@@ -9887,6 +9891,15 @@ class SettingsActivity extends StatefulWidget {
 class _SettingsActivityState extends State<SettingsActivity> {
 
   late DatabaseHandler handler;
+  bool isSync = false;
+  bool isMarket = false;
+  var invitesContextMenuBtns = {
+    'Кто-угодно',
+    'Друзья',
+    'Никто'
+  };
+  String selectedInvitesItem = 'Друзья';
+  bool isAutoDefinition = false;
 
   getFeedback(context) {
     showDialog<String>(
@@ -9908,6 +9921,40 @@ class _SettingsActivityState extends State<SettingsActivity> {
         ]
       )
     );
+  }
+
+  showMarketNotificationsInfo(context) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Прием пищи'),
+        content: Container(
+          child: Text(
+            (
+              isMarket ?
+                'Получайте маркетинговые\nуведомления от Softtrack Здоровье и\nее партнеров.'
+              :
+                'Перестать получать маркетинговые\nуведомления от Softtrack Здоровье и\nее партнеров.'
+            )
+          )
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              return Navigator.pop(context, 'OK');
+            },
+            child: const Text('Ок')
+          )
+        ]
+      )
+    );
+  }
+
+  toggleMarketNotifications(context) {
+    setState(() {
+      isMarket = !isMarket;
+    });
+    showMarketNotificationsInfo(context);
   }
 
   @override
@@ -9966,35 +10013,42 @@ class _SettingsActivityState extends State<SettingsActivity> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                  'Синхронизация с Softtrack Здоровье',
-                                  style: TextStyle(
-                                    fontSize: 18
+                        GestureDetector(
+                          child: Row(
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'Синхронизация с Softtrack Здоровье',
+                                    style: TextStyle(
+                                      fontSize: 18
+                                    )
+                                  ),
+                                  Text(
+                                    'Включите, чтобы завершить\nвосстановление данных.',
+                                    style: TextStyle(
+                                      color: Color.fromARGB(255, 0, 200, 0)
+                                    )
+                                  ),
+                                  Divider(
+                                    thickness: 1,
+                                    color: Color.fromARGB(255, 0, 0, 0)
                                   )
-                                ),
-                                Text(
-                                  'Включите, чтобы завершить\nвосстановление данных.',
-                                  style: TextStyle(
-                                    color: Color.fromARGB(255, 0, 200, 0)
-                                  )
-                                ),
-                                Divider(
-                                  thickness: 1,
-                                  color: Color.fromARGB(255, 0, 0, 0)
-                                )
-                              ]
-                            ),
-                            Switch(
-                              onChanged: (value) {
-
-                              },
-                              value: false
-                            )
-                          ]
+                                ]
+                              ),
+                              Switch(
+                                onChanged: (value) {
+                                  setState(() {
+                                    isSync = !isSync;
+                                  });
+                                },
+                                value: isSync
+                              )
+                            ]
+                          ),
+                          onTap: () {
+                            Navigator.pushNamed(context, '/sync');
+                          }
                         )
                       ]
                     ),
@@ -10042,71 +10096,81 @@ class _SettingsActivityState extends State<SettingsActivity> {
                           Navigator.pushNamed(context, '/settings/general/measure');
                         }
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                children: [
+                      GestureDetector(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  children: [
+                                    Text(
+                                      'Макретинговые уведомления',
+                                      style: TextStyle(
+                                        fontSize: 18
+                                      )
+                                    ),
+                                    Text(
+                                      'Получение уведомлений от Softtrack\nЗдоровье.',
+                                      style: TextStyle(
+                                        color: Color.fromARGB(255, 175, 175, 175)
+                                      )
+                                    ),
+                                    Divider(
+                                        thickness: 1,
+                                        color: Color.fromARGB(255, 0, 0, 0)
+                                    )
+                                  ]
+                                ),
+                                Switch(
+                                  onChanged: (value) {
+                                    toggleMarketNotifications(context);
+                                  },
+                                  value: isMarket
+                                )
+                              ]
+                            )
+                          ]
+                        ),
+                        onTap: () {
+                          toggleMarketNotifications(context);
+                        }
+                      ),
+                      GestureDetector(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  children: [
                                   Text(
-                                    'Макретинговые уведомления',
+                                    'Подключенные службы',
                                     style: TextStyle(
                                       fontSize: 18
                                     )
                                   ),
                                   Text(
-                                    'Получение уведомлений от Softtrack\nЗдоровье.',
+                                    'Синхронизация данных Softtrack Здоровье с учетными\nзаписямисторонних веб-сервисов',
                                     style: TextStyle(
                                       color: Color.fromARGB(255, 175, 175, 175)
                                     )
                                   ),
                                   Divider(
-                                      thickness: 1,
-                                      color: Color.fromARGB(255, 0, 0, 0)
+                                    thickness: 1,
+                                    color: Color.fromARGB(255, 0, 0, 0)
                                   )
                                 ]
-                              ),
-                              Switch(
-                                onChanged: (value) {
-
-                                },
-                                value: false
                               )
-                            ]
+                           ]
                           )
                         ]
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                children: [
-                                Text(
-                                  'Подключенные службы',
-                                  style: TextStyle(
-                                    fontSize: 18
-                                  )
-                                ),
-                                Text(
-                                  'Синхронизация данных Softtrack Здоровье с учетными\nзаписямисторонних веб-сервисов',
-                                  style: TextStyle(
-                                    color: Color.fromARGB(255, 175, 175, 175)
-                                  )
-                                ),
-                                Divider(
-                                  thickness: 1,
-                                  color: Color.fromARGB(255, 0, 0, 0)
-                                )
-                              ]
-                            )
-                         ]
-                        )
-                      ]
+                      onTap: () {
+                        Navigator.pushNamed(context, '/services');
+                      }
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -10165,39 +10229,59 @@ class _SettingsActivityState extends State<SettingsActivity> {
                   ),
                   child: Column(
                       children: [
-                        Row(
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                  'Получать приглашения от',
-                                  style: TextStyle(
-                                    fontSize: 18
+                        PopupMenuButton(
+                          onSelected: (value) {
+                            setState(() {
+                              selectedInvitesItem = value as String;
+                            });
+                          },
+                          itemBuilder: (BuildContext context) {
+                            return invitesContextMenuBtns.map((String choice) {
+                              return PopupMenuItem<String>(
+                                value: choice,
+                                child: Text(choice)
+                              );
+                            }).toList();
+                          },
+                          child: Row(
+                            children: [
+                              Column(
+                                children: [
+                                  Text(
+                                    'Получать приглашения от',
+                                    style: TextStyle(
+                                      fontSize: 18
+                                    )
+                                  ),
+                                  Text(
+                                    selectedInvitesItem,
+                                    style: TextStyle(
+                                      color: Color.fromARGB(255, 0, 200, 0)
+                                    )
+                                  ),
+                                  Divider(
+                                    thickness: 1,
+                                    color: Color.fromARGB(255, 0, 0, 0)
                                   )
-                                ),
-                                Text(
-                                  'Друзья',
-                                  style: TextStyle(
-                                    color: Color.fromARGB(255, 0, 200, 0)
-                                  )
-                                ),
-                                Divider(
-                                  thickness: 1,
-                                  color: Color.fromARGB(255, 0, 0, 0)
-                                )
-                              ]
-                            ),
-                          ]
+                                ]
+                              ),
+                            ]
+                          )
                         ),
-                        Row(
-                          children: [
-                            Text(
-                                'Поиск друзей и управление',
-                                style: TextStyle(
-                                    fontSize: 18
-                                )
-                            )
-                          ]
+                        GestureDetector(
+                          child: Row(
+                            children: [
+                              Text(
+                                  'Поиск друзей и управление',
+                                  style: TextStyle(
+                                      fontSize: 18
+                                  )
+                              )
+                            ]
+                          ),
+                          onTap: () {
+                            Navigator.pushNamed(context, '/friends');
+                          }
                         )
                       ]
                   )
@@ -10220,34 +10304,41 @@ class _SettingsActivityState extends State<SettingsActivity> {
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Column(
-                                children: [
-                                  Text(
-                                    'Автоопределение тренировок',
-                                    style: TextStyle(
-                                      fontSize: 18
+                      GestureDetector(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Column(
+                                  children: [
+                                    Text(
+                                      'Автоопределение тренировок',
+                                      style: TextStyle(
+                                        fontSize: 18
+                                      )
+                                    ),
+                                    Divider(
+                                      thickness: 1,
+                                      color: Color.fromARGB(255, 0, 0, 0)
                                     )
-                                  ),
-                                  Divider(
-                                    thickness: 1,
-                                    color: Color.fromARGB(255, 0, 0, 0)
-                                  )
-                                ]
-                              ),
-                              Switch(
-                                onChanged: (value) {
-
-                                },
-                                value: false
-                              )
-                            ]
-                          )
-                        ]
+                                  ]
+                                ),
+                                Switch(
+                                  onChanged: (value) {
+                                    setState(() {
+                                      isAutoDefinition = !isAutoDefinition;
+                                    });
+                                  },
+                                  value: isAutoDefinition
+                                )
+                              ]
+                            )
+                          ]
+                        ),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/auto');
+                        }
                       ),
                     ]
                   )
@@ -12151,18 +12242,18 @@ class _UploadPersonalDataActivityState extends State<UploadPersonalDataActivity>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                  padding: EdgeInsets.all(
-                      15
-                  ),
-                  margin: EdgeInsets.all(
-                      15
-                  ),
-                  decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 255, 255, 255)
-                  ),
-                  child: Text(
-                      'Нажмите на кнопку ниже, чтобы загрузить\nсвои персональные данные. Будут скачены\nперсональные данные, которые хранятся на вашем телефоне в сервисах Softtrack Здоровье.'
-                  )
+                padding: EdgeInsets.all(
+                  15
+                ),
+                margin: EdgeInsets.all(
+                  15
+                ),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 255, 255, 255)
+                ),
+                child: Text(
+                  'Нажмите на кнопку ниже, чтобы загрузить\nсвои персональные данные. Будут скачены\nперсональные данные, которые хранятся на вашем телефоне в сервисах Softtrack Здоровье.'
+                )
               ),
               TextButton(
                   child: Text(
@@ -12290,6 +12381,512 @@ class _PermissionDataActivityState extends State<PermissionDataActivity> {
             ),
           ]
       )
+    );
+  }
+
+}
+
+class SyncActivity extends StatefulWidget {
+
+  const SyncActivity({Key? key}) : super(key: key);
+
+  @override
+  State<SyncActivity> createState() => _SyncActivityState();
+
+}
+
+class _SyncActivityState extends State<SyncActivity> {
+
+  bool isSync = false;
+  String lastTimeSync = '20:00';
+  String lastDateSync = '28 февраля 2022 г.';
+  var monthsLabels = <int, String>{
+    0: 'января',
+    1: 'февраля',
+    2: 'марта',
+    3: 'апреля',
+    4: 'мая',
+    5: 'июня',
+    6: 'июля',
+    7: 'августа',
+    8: 'сентября',
+    9: 'октября',
+    10: 'ноября',
+    11: 'декабря'
+  };
+
+  syncLastDateTime() {
+    DateTime currentDateTime = DateTime.now();
+    int currentDateTimeDay = currentDateTime.day;
+    int currentDateTimeMonth = currentDateTime.month;
+    String currentDateTimeMonthLabel = monthsLabels[currentDateTime.month]!;
+    int currentDateTimeHours = currentDateTime.hour;
+    int currentDateTimeMinutes = currentDateTime.minute;
+    setState(() {
+      lastDateSync = '${currentDateTimeDay} ${currentDateTimeMonthLabel}';
+      lastTimeSync = '${currentDateTimeHours}:${currentDateTimeMinutes}';
+    });
+  }
+
+  toggleSync() {
+    setState(() {
+      isSync = !isSync;
+      if (isSync) {
+        syncLastDateTime();
+      }
+    });
+  }
+
+  @override
+  initState() {
+    super.initState();
+    syncLastDateTime();
+  }
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Синхронизация с Softtrack аккаунтом'
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Container(
+            width: MediaQuery
+                .of(context)
+                .size
+                .width,
+            height: 100,
+            padding: EdgeInsets.all(
+                15
+            ),
+            margin: EdgeInsets.all(
+              15
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  (
+                    isSync ?
+                      'Включено'
+                    :
+                      'Отключено'
+                  ),
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 0, 0, 0),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold
+                  )
+                ),
+                Switch(
+                  onChanged: (value) {
+                    toggleSync();
+                  },
+                  value: isSync
+                )
+              ]
+            )
+          ),
+          Text(
+            'Последняяя синхронизация ${lastDateSync} в ${lastTimeSync}'
+          )
+        ]
+      ),
+      persistentFooterButtons: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              child: Text(
+                (
+                  isSync ?
+                  'Рассинхронизировать'
+                      :
+                  'Синхронизировать'
+                )
+              ),
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.all<Color>(
+                  Color.fromARGB(255, 0, 0, 0)
+                )
+              ),
+              onPressed:() {
+                toggleSync();
+              }
+            )
+          ]
+        )
+      ],
+    );
+  }
+}
+
+class ConnectedServicesActivity extends StatefulWidget {
+
+  const ConnectedServicesActivity({Key? key}) : super(key: key);
+
+  @override
+  State<ConnectedServicesActivity> createState() => _ConnectedServicesActivityState();
+
+}
+
+class _ConnectedServicesActivityState extends State<ConnectedServicesActivity> {
+
+  @override
+  initState() {
+    super.initState();
+
+  }
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Подключенные службы'
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+
+      )
+    );
+  }
+}
+
+class FriendsSearchActivity extends StatefulWidget {
+
+  const FriendsSearchActivity({Key? key}) : super(key: key);
+
+  @override
+  State<FriendsSearchActivity> createState() => _FriendsSearchActivityState();
+
+}
+
+class _FriendsSearchActivityState extends State<FriendsSearchActivity> {
+
+  String selectedInvitesItem = 'Друзья';
+  var invitesContextMenuBtns = {
+    'Кто-угодно',
+    'Друзья',
+    'Никто'
+  };
+  bool isAutoAdd = false;
+  bool isSync = false;
+
+  @override
+  initState() {
+    super.initState();
+
+  }
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Поиск друзей и контактов'
+        )
+      ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 225),
+      body: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(
+              15
+            ),
+            margin: EdgeInsets.symmetric(
+              vertical: 15
+            ),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 255, 255, 255)
+            ),
+            child: Column(
+              children: [
+                PopupMenuButton(
+                  onSelected: (value) {
+                    setState(() {
+                      selectedInvitesItem = value as String;
+                    });
+                  },
+                  itemBuilder: (BuildContext context) {
+                    return invitesContextMenuBtns.map((String choice) {
+                      return PopupMenuItem<String>(
+                        value: choice,
+                        child: Text(choice)
+                      );
+                    }).toList();
+                  },
+                  child: Row(
+                    children: [
+                      Column(
+                          children: [
+                            Text(
+                              'Кто может видеть количество шагов',
+                              style: TextStyle(
+                                fontSize: 18
+                              )
+                            ),
+                            Text(
+                              selectedInvitesItem,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 200, 0)
+                              )
+                            ),
+                            Divider(
+                              thickness: 1,
+                              color: Color.fromARGB(255, 0, 0, 0)
+                            )
+                          ]
+                      ),
+                    ]
+                  )
+                )
+              ]
+            )
+          ),
+          TextButton(
+            style: ButtonStyle(
+              foregroundColor: MaterialStateProperty.all<Color>(
+                Color.fromARGB(255, 0, 0, 0)
+              ),
+              backgroundColor: MaterialStateProperty.all<Color>(
+                Color.fromARGB(255, 255, 255, 255)
+              )
+            ),
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                Text(
+                  'Автодобавление друзей в\nтаблицу лидеров',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold
+                  )
+                ),
+                Switch(
+                  value: isAutoAdd,
+                  onChanged: (value) {
+                    setState(() {
+                      isAutoAdd = !isAutoAdd;
+                    });
+                  }
+                )
+              ]
+            ),
+            onPressed: () {
+              setState(() {
+                isAutoAdd = !isAutoAdd;
+              });
+            }
+          ),
+          TextButton(
+            style: ButtonStyle(
+              foregroundColor: MaterialStateProperty.all<Color>(
+                Color.fromARGB(255, 0, 0, 0)
+              ),
+              backgroundColor: MaterialStateProperty.all<Color>(
+                Color.fromARGB(255, 255, 255, 255)
+              )
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      'Cинхронизировать контакты',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold
+                      )
+                    ),
+                    Text(
+                      'Автоматически синхронизировать\nсписок пользователей Softtrack Здоровье\nиз вашего списка контактов с вашим\nсписком друзей.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color.fromARGB(255, 150, 150, 150),
+                        fontWeight: FontWeight.bold
+                      )
+                    )
+                  ]
+                ),
+                Switch(
+                  value: isAutoAdd,
+                  onChanged: (value) {
+                    setState(() {
+                      isSync = !isSync;
+                    });
+                  }
+                )
+              ]
+            ),
+            onPressed: () {
+              setState(() {
+                isSync = !isSync;
+              });
+            }
+          )
+        ]
+      )
+    );
+  }
+
+}
+
+class ExerciseAutoDefinitionActivity extends StatefulWidget {
+
+  const ExerciseAutoDefinitionActivity({Key? key}) : super(key: key);
+
+  @override
+  State<ExerciseAutoDefinitionActivity> createState() => _ExerciseAutoDefinitionActivityState();
+
+}
+
+class _ExerciseAutoDefinitionActivityState extends State<ExerciseAutoDefinitionActivity> {
+
+
+  bool isEnabled = false;
+  bool isPlaceDetect = false;
+
+  @override
+  initState() {
+    super.initState();
+
+  }
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Автоопределение тренировок'
+          )
+        ),
+        backgroundColor: Color.fromARGB(255, 225, 225, 225),
+        body: Column(
+            children: [
+              TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(
+                    isEnabled ?
+                      Color.fromARGB(255, 175, 175, 175)
+                    :
+                    Color.fromARGB(255, 255, 255, 255)
+                  )
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    (
+                      isEnabled ?
+                        Text(
+                          'Включено',
+                          style: TextStyle(
+                            color: Color.fromARGB(255, 0, 150, 0),
+                            fontWeight: FontWeight.bold
+                          )
+                        )
+                      :
+                        Text(
+                          'Выключено',
+                          style: TextStyle(
+                            color: Color.fromARGB(255, 0, 0, 0),
+                            fontWeight: FontWeight.bold
+                          )
+                        )
+                    ),
+                    Switch(
+                      thumbColor: MaterialStateProperty.all<Color>(
+                        Color.fromARGB(255, 255, 255, 255)
+                      ),
+                      activeTrackColor: Color.fromARGB(255, 0, 150, 0),
+                      inactiveTrackColor: Color.fromARGB(255, 150, 150, 150),
+                      value: isEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          isEnabled = !isEnabled;
+                        });
+                      }
+                    )
+                  ]
+                ),
+                onPressed: () {
+                  setState(() {
+                    isEnabled = !isEnabled;
+                  });
+                }
+              ),
+              Text(
+                'Автоматически отслеживайте и записывайте\nпоказатели тренировки, такие как\nпродолжительность, пройденное расстояние и\nколичество сожженных калорий, при ходьбе или\nбеге более 10 минут.'
+              ),
+              (
+                isEnabled ?
+                  Column(
+                    children: [
+                      TextButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                            Color.fromARGB(255, 255, 255, 255)
+                          )
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Отслеживание\nместоположений тренировки',
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 0, 0, 0),
+                                fontWeight: FontWeight.bold
+                              )
+                            ),
+                            Switch(
+                              thumbColor: MaterialStateProperty.all<Color>(
+                                Color.fromARGB(255, 255, 255, 255)
+                              ),
+                              activeTrackColor: Color.fromARGB(255, 0, 150, 0),
+                              inactiveTrackColor: Color.fromARGB(255, 150, 150, 150),
+                              value: isPlaceDetect,
+                              onChanged: (value) {
+                                setState(() {
+                                  isPlaceDetect = !isPlaceDetect;
+                                });
+                              }
+                            )
+                          ]
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isPlaceDetect = !isPlaceDetect;
+                          });
+                        }
+                      ),
+                      Text(
+                        'Автоматически отслеживайте и записывайте\nместоположение тренировки(например,\nрайон ходьбы или бега), даже когда\n приложение Softtrack Здоровье  открыто и не\nработает в активном режиме. Информация о\nместоположении собирается только тогда, когда\nнастройки определения местоположения на устройстве и в приложении включены.'
+                      )
+                    ]
+                  )
+                :
+                  Column()
+              )
+            ]
+        )
     );
   }
 
