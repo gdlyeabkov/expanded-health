@@ -132,7 +132,6 @@ class _MyHomePageState extends State<MyHomePage> {
     true,
     true
   ];
-
   /*
   sdk не позволяет использовать педометр
   late Stream<StepCount> _stepCountStream;
@@ -140,6 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String _status = '?', _steps = '?';
   */
   String _steps = '0';
+  
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   bool isExerciseEnabled = false;
   String exerciseType = '';
@@ -7884,6 +7884,7 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
   int initialMinutes = 60;
   String oneCharPrefix = '0';
   String startTimerTitle = '00:00:00';
+  String startTime = '';
 
   startTimer() {
     setState(() {
@@ -7950,6 +7951,18 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
     int pickedDateDay = pickedDate.day;
     int pickedDateMonth = pickedDate.month;
     int pickedDateYear = pickedDate.year;
+    int pickedDateHours = pickedDate.hour;
+    int pickedDateMinutes = pickedDate.minute;
+
+    String rawEndTimeHours = pickedDateHours.toString();
+    if (pickedDateHours < 10) {
+      rawEndTimeHours = '0${pickedDateHours}';
+    }
+    String rawEndTimeMinutes = pickedDateMinutes.toString();
+    if (pickedDateMinutes < 10) {
+      rawEndTimeMinutes = '0${pickedDateMinutes}';
+    }
+
     String rawDate = '${pickedDateDay}.${pickedDateMonth}.${pickedDateYear}';
     handler.updateExerciseIndicators(0, '00:00', exerciseType, startTimerTitle, false);
     handler.retrieveExerciseRecords().then((value) {
@@ -7978,7 +7991,18 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
       }
       handler.addNewExerciseRecord(exerciseType, rawDate, startTimerTitle);
     });
-    Navigator.pushNamed(context, '/exercise/results');
+    // Navigator.pushNamed(context, '/exercise/results');
+    Navigator.pushNamed(
+        context,
+        '/exercise/results',
+        arguments: {
+          'exerciseType': exerciseType,
+          'exerciseDate': rawDate,
+          'exerciseStartTime': '${startTime}',
+          'exerciseEndTime': '${rawEndTimeHours}:${rawEndTimeHours}',
+          'exerciseDuration': startTimerTitle
+        }
+    );
   }
 
   @override
@@ -7986,8 +8010,19 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
     super.initState();
     this.handler = DatabaseHandler();
     this.handler.initializeDB().whenComplete(() async {
+      DateTime pickedDate = DateTime.now();
+      int startTimeHours = pickedDate.hour;
+      String rawStartTimeHours = startTimeHours.toString();
+      if (startTimeHours < 10) {
+        rawStartTimeHours = '0${startTimeHours}';
+      }
+      int startTimeMinutes = pickedDate.minute;
+      String rawStartTimeMinutes = startTimeMinutes.toString();
+      if (startTimeMinutes < 10) {
+        rawStartTimeMinutes = '0${startTimeMinutes}';
+      }
       setState(() {
-
+        startTime = '${startTimeHours}:${startTimeMinutes}';
       });
     });
     runStartedTimer();
@@ -8352,6 +8387,33 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
   late XFile? _image;
   var cameras;
   bool isTakePhoto = false;
+  String exerciseDuration = '00:00:00';
+  String exerciseDate = '';
+  var weekDayLabels = <String, String>{
+    'Monday': 'пн',
+    'Tuesday': 'вт',
+    'Wednesday': 'ср',
+    'Thursday': 'чт',
+    'Friday': 'пт',
+    'Saturday': 'сб',
+    'Sunday': 'вс'
+  };
+  var monthsLabels = <int, String>{
+    0: 'янв.',
+    1: 'февр.',
+    2: 'мар.',
+    3: 'апр.',
+    4: 'мая',
+    5: 'июн.',
+    6: 'июл.',
+    7: 'авг.',
+    8: 'сен.',
+    9: 'окт.',
+    10: 'ноя.',
+    11: 'дек'
+  };
+  String exerciseStartTime = '00:00';
+  String exerciseEndTime = '00:00';
 
   Future getImage() async {
     var image = await _picker.pickImage(source: ImageSource.gallery);
@@ -8400,6 +8462,26 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
     );
   }
 
+  String getRepresentationDate(date) {
+    List<String> rawDateParts = date.split('.');
+    String rawDateDay = rawDateParts[0];
+    String rawDateMonth = rawDateParts[1];
+    String rawDateYear = rawDateParts[2];
+    int dateMonth = int.parse(rawDateMonth);
+    dateMonth -= 1;
+    String dateMonthLabel = monthsLabels[dateMonth]!;
+    String correctDateMonth = rawDateMonth;
+    if (correctDateMonth.length == 1) {
+      correctDateMonth = '0${correctDateMonth}';
+    }
+    DateTime pickedDate = DateTime.parse('${rawDateYear}-${correctDateMonth}-${rawDateDay}');
+    String weekDayKey = DateFormat('EEEE').format(pickedDate);
+    String? weekDayLabel = weekDayLabels[weekDayKey];
+    String weekDay = weekDayLabel!;
+    String representationDate = '${weekDay}, ${rawDateDay} ${dateMonthLabel}';
+    return representationDate;
+  }
+
   @override
   initState() {
     super.initState();
@@ -8414,6 +8496,19 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
 
   @override
   Widget build(BuildContext context) {
+
+    setState(() {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      if (arguments != null) {
+        print(arguments['category']);
+        exerciseType = arguments['exerciseType'];
+        exerciseDate = arguments['exerciseDate'];
+        exerciseStartTime = arguments['exerciseStartTime'];
+        exerciseEndTime = arguments['exerciseEndTime'];
+        exerciseDuration = arguments['exerciseDuration'];
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -8424,10 +8519,10 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
       body: Column(
         children: [
           Text(
-            'вт, 22 февр.'
+            getRepresentationDate(exerciseDate)
           ),
           Text(
-            '16:27 - 16:27'
+            '${exerciseStartTime} - ${exerciseEndTime}'
           ),
           Container(
             width: 1000,
@@ -8464,7 +8559,7 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                    '00:00:12',
+                      exerciseDuration,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20
@@ -8489,13 +8584,13 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
           Container(
             width: 1000,
             padding: EdgeInsets.all(
-                15
+              15
             ),
             margin: EdgeInsets.symmetric(
-                vertical: 15
+              vertical: 15
             ),
             decoration: BoxDecoration(
-                color: Color.fromARGB(255, 255, 255, 255)
+              color: Color.fromARGB(255, 255, 255, 255)
             ),
             child: Column(
                 children: [
@@ -8512,7 +8607,7 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
                             )
                           ),
                           Text(
-                            '00:00:12',
+                            exerciseDuration,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -8531,7 +8626,7 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
                             )
                           ),
                           Text(
-                            '00:00:12',
+                            exerciseDuration,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
