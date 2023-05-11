@@ -9,15 +9,10 @@ import 'package:flutter/services.dart';
 import 'package:sqlite_viewer/sqlite_viewer.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-// import 'package:pedometer/pedometer.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
-/*
-не работает account-manager-plugin
-import 'package:account_manager_plugin/account_manager_plugin.dart';
-*/
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as latLng;
 import 'package:sensors_plus/sensors_plus.dart';
@@ -132,12 +127,6 @@ class _MyHomePageState extends State<MyHomePage> {
     true,
     true
   ];
-  /*
-  sdk не позволяет использовать педометр
-  late Stream<StepCount> _stepCountStream;
-  late Stream<PedestrianStatus> _pedestrianStatusStream;
-  String _status = '?', _steps = '?';
-  */
   String _steps = '0';
   
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
@@ -251,50 +240,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  /*
-  sdk не позволяет использовать pedometer
-  void onStepCount(StepCount event) {
-    print(event);
-    setState(() {
-      _steps = event.steps.toString();
-    });
-  }
-
-  void onPedestrianStatusChanged(PedestrianStatus event) {
-    print(event);
-    setState(() {
-      _status = event.status;
-    });
-  }
-
-  void onPedestrianStatusError(error) {
-    print('onPedestrianStatusError: $error');
-    setState(() {
-      _status = 'Pedestrian Status not available';
-    });
-    print(_status);
-  }
-
-  void onStepCountError(error) {
-    print('onStepCountError: $error');
-    setState(() {
-      _steps = 'Step Count not available';
-    });
-  }
-
-  initPlatformState() {
-    _pedestrianStatusStream = Pedometer.pedestrianStatusStream;
-    _pedestrianStatusStream
-        .listen(onPedestrianStatusChanged)
-        .onError(onPedestrianStatusError);
-
-    _stepCountStream = Pedometer.stepCountStream;
-    _stepCountStream.listen(onStepCount).onError(onStepCountError);
-
-    if (!mounted) return;
-  }
-  */
-
   addFoodRecord(context) {
     Navigator.pushNamed(
         context,
@@ -316,36 +261,11 @@ class _MyHomePageState extends State<MyHomePage> {
   void onDidReceiveLocalNotification(
     int id, String? title, String? body, String? payload) async {
     // display a dialog with the notification details, tap ok to go to another page
-    print('notification info: ${id}, ${title}, ${body}, ${payload}');
-    /*showDialog(
-      context: context,
-      builder: (BuildContext context) => CupertinoAlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: Text('Ok'),
-            onPressed: () async {
-              Navigator.of(context, rootNavigator: true).pop();
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SecondScreen(payload),
-                ),
-              );
-            },
-          )
-        ],
-      ),
-    );*/
   }
 
   initializeNotifications() async {
-    // setState(() async {
       flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
       const AndroidInitializationSettings initializationSettingsAndroid =
-      // AndroidInitializationSettings('launch_background');
       AndroidInitializationSettings('steps_logo');
       final IOSInitializationSettings initializationSettingsIOS =
       IOSInitializationSettings(
@@ -366,7 +286,6 @@ class _MyHomePageState extends State<MyHomePage> {
       await flutterLocalNotificationsPlugin.initialize(initializationSettings,
           onSelectNotification: onSelectNotification);
       await showStepsNotification();
-    // });
   }
 
   showStepsNotification() async {
@@ -389,7 +308,6 @@ class _MyHomePageState extends State<MyHomePage> {
       for (Controller controller in value) {
         if (controllerName == controller.name) {
           print('controller.is_activated: ${controller.is_activated}');
-          // handler.updateIsActivatedController(controllerName, controller.is_activated == 1 ? 0 : 1);
           break;
         }
       }
@@ -433,11 +351,6 @@ class _MyHomePageState extends State<MyHomePage> {
       controllersActives[6] = initialControllersActives[6];
     });
   }
-
-  // getAccount() async {
-  //   List<dynamic> accounts = await AccountManagerPlugin.getAccounts;
-  //   print('${accounts.length}');
-  // }
 
   void runStartedTimer() async {
     setState(() {
@@ -572,17 +485,8 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       });
     });
-    /*
-    sdk не позволяет использовать pedometer
-    initPlatformState();
-    */
-    /*
-      не работает account-manager-plugin
-      getAccount();
-    */
 
     initializeNotifications();
-    // showStepsNotification();
 
     setState(() {
       title = appName;
@@ -1063,7 +967,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                             )
                                           ),
                                           onPressed: () {
-                                            // handler.addNewExerciseRecord('Ходьба', '22.11.2000', '00:00:00');
                                             Navigator.pushNamed(
                                               context,
                                               '/exercise/record',
@@ -1097,7 +1000,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                             )
                                           ),
                                           onPressed: () {
-                                            // handler.addNewExerciseRecord('Бег', '22.11.2000', '00:00:00');
                                             Navigator.pushNamed(
                                               context,
                                               '/exercise/record',
@@ -1131,7 +1033,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                               )
                                             ),
                                             onPressed: () {
-                                              // handler.addNewExerciseRecord('Велоспорт', '22.11.2000', '00:00:00');
                                               Navigator.pushNamed(
                                                 context,
                                                 '/exercise/record',
@@ -1265,7 +1166,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                     TextButton(
                                       onPressed: () {
                                         addFoodRecord(context);
-                                        // handler.addNewFoodRecord('Завтрак');
                                       },
                                       child: Text(
                                         'Запись'
@@ -1360,7 +1260,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          // handler.addNewSleepRecord('00', '00', '22.11.2000');
                                           addSleepRecord(context);
                                         },
                                         child: Text(
@@ -3862,16 +3761,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              // Image.network(
-                              //   'https://cdn3.iconfinder.com/data/icons/generic-avatars/128/avatar_portrait_man_male-256.png',
-                              //   width: 100,
-                              //   height: 100
-                              // ),
-                          // Image.network(
-                          //                                 'https://cdn3.iconfinder.com/data/icons/generic-avatars/128/avatar_portrait_man_male-256.png',
-                          //                                 width: 100,
-                          //                                 height: 100
-                          //                               )
                               Image.asset(
                                 'assets/images/user_logo.png',
                                 width: 100,
@@ -5034,18 +4923,6 @@ class _FoodActivityState extends State<FoodActivity> {
 
   @override
   Widget build(BuildContext context) {
-
-    /*
-    не работает автоматическое открытие диалога
-    final arguments = ModalRoute.of(context)!.settings.arguments as Map;
-    if (arguments != null) {
-      bool isAddFoodRecord = arguments['isAddFoodRecord'];
-      print('$isAddFoodRecord');
-      if (isAddFoodRecord) {
-        setFoodType(context);
-      }
-    }
-    */
 
     return Scaffold(
       appBar: AppBar(
@@ -8448,7 +8325,6 @@ class _RecordExerciseResultsActivityState extends State<RecordExerciseResultsAct
                   камера требует более высокий minSdkVersion
                   */
                   cameras = await availableCameras();
-                  final firstCamera = cameras.first;
                   setState((){
                     isTakePhoto = true;
                   });
@@ -8833,15 +8709,8 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
         (await getTemporaryDirectory()).path,
         '${DateTime.now()}.png',
       );
-      // 2
+
       await cameraController?.takePicture();
-      // 3
-      /*Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PreviewImageScreen(imagePath: path),
-        ),
-      );*/
     } catch (e) {
       print(e);
     }
@@ -9301,7 +9170,6 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
                           'Камера'
                         ),
                         onPressed: () {
-                          // _onCapturePressed(context);
                           setState(() {
                             isTakePhoto = true;
                           });
@@ -9355,7 +9223,6 @@ class _EditMyPageActivityState extends State<EditMyPageActivity> {
                               )
                             )
                           ),
-                          // controller: TextEditingController()..text = '${newCustomTimerHours}:${newCustomTimerMinutes}:${newCustomTimerSeconds}',
                           onChanged: (value) {
                             setState(() {
                               nickName = value;
@@ -10477,7 +10344,6 @@ class _SettingsActivityState extends State<SettingsActivity> {
                           ),
                           onTap: () async {
                             final String url = 'https://samsunghealth.com/privacy?lc=ru&cc=RU&scv=6202017&platform=1&fqdn=samsunghealth.settings&source=2';
-                            // window.open(url, 'name');
                             if (await canLaunch(url))
                               await launch(url);
                           }
@@ -11866,26 +11732,6 @@ class _AwardsCategoryActivityState extends State<AwardsCategoryActivity> {
                   );
                 }
               )
-              /*Row(
-                children: [
-                  Column(
-                    children: [
-                      Image.network(
-                          'https://cdn2.iconfinder.com/data/icons/flat-pack-1/64/Trophy-256.png',
-                          width: 75
-                      ),
-                      Text(
-                        'awardName',
-                        textAlign: TextAlign.center,
-                      ),
-                      Text(
-                        'awardDate',
-                        textAlign: TextAlign.center,
-                      )
-                    ]
-                  )
-                ]
-              )*/
             )
           )
         ]

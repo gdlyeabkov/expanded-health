@@ -25,12 +25,6 @@ class DatabaseHandler {
         await database.execute(
           "CREATE TABLE body_records(id INTEGER PRIMARY KEY, marks TEXT, musculature INTEGER, fat INTEGER, weight REAL, date TEXT)"
         );
-        // await database.execute(
-        //   "DROP DATABASE flutter_health.db"
-        // );
-        // await database.execute(
-        //   "DROP DATABASE flutter_health"
-        // );
       },
       onOpen: (database) async {
         await database.execute(
@@ -48,12 +42,6 @@ class DatabaseHandler {
         await database.execute(
             "CREATE TABLE IF NOT EXISTS awards(id INTEGER PRIMARY KEY, name TEXT, description TEXT, type TEXT)"
         );
-        // await database.execute(
-        //   "DELETE DATABASE flutter_health"
-        // );
-        // await database.execute(
-        //   "DELETE DATABASE flutter_health"
-        // );
         Future<List<Indicators>> rawIndicators = retrieveIndicators();
         rawIndicators.then((value) async {
           print('Длина: $value.length');
