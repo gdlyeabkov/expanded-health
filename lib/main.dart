@@ -499,7 +499,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return DefaultTabController(
       initialIndex: 0,
-      length: 5,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(title),
@@ -560,9 +560,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Tab(
                   text: 'Моя стр.'
-              ),
-              Tab(
-                  text: 'Database inspector'
               )
             ]
           )
@@ -646,7 +643,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                           Icon(
                                             Icons.add_circle,
                                             color: Color.fromARGB(255, 0, 200, 0),
-                                          )
+                                          )s
+
                                         ),
                                         onTap: () {
                                           updateController('active', 0);
@@ -6046,7 +6044,7 @@ class _RecordFoodActivityState extends State<RecordFoodActivity> {
           ),
 
           actions: [
-            FlatButton(
+            TextButton(
               child: Text(
                 nextBtnTitle,
                 style: TextStyle(
@@ -6935,7 +6933,7 @@ class _FoodHistoryActivityState extends State<FoodHistoryActivity> {
                 'Журнал питания'
               ),
               actions: [
-                FlatButton(
+                TextButton(
                   child: Text(
                     'Готово',
                     style: TextStyle(
@@ -7497,8 +7495,7 @@ class _AddExerciseActivityState extends State<AddExerciseActivity> {
             'Добавить тренировки'
         ),
         actions: [
-          FlatButton(
-            textColor: Color.fromARGB(255, 255, 255, 255),
+          TextButton(
             child: Icon(
               Icons.search
             ),
@@ -7630,14 +7627,12 @@ class _RecordExerciseActivityState extends State<RecordExerciseActivity> {
           exerciseType
         ),
         actions: [
-          FlatButton(
+          TextButton(
             child: Icon(
               Icons.music_note
             ),
             onPressed: () {
-
-            },
-            textColor: Color.fromARGB(255, 255, 255, 255)
+            }
           ),
           PopupMenuButton<String>(
             itemBuilder: (BuildContext context) {
@@ -7922,14 +7917,12 @@ class _RecordStartedExerciseActivityState extends State<RecordStartedExerciseAct
           exerciseType
         ),
         actions: [
-          FlatButton(
+          TextButton(
             child: Icon(
                 Icons.music_note
             ),
             onPressed: () {
-
-            },
-            textColor: Color.fromARGB(255, 255, 255, 255)
+            }
           ),
           PopupMenuButton<String>(
             itemBuilder: (BuildContext context) {
@@ -11128,7 +11121,7 @@ class _AwardsActivityState extends State<AwardsActivity> {
           'Значки'
         ),
         actions: [
-          FlatButton(
+          TextButton(
             child: Icon(
               Icons.calendar_today
             ),
@@ -11780,7 +11773,7 @@ class _AwardActivityState extends State<AwardActivity> {
           'Награды'
         ),
         actions: [
-          FlatButton(
+          TextButton(
             child: Icon(
               Icons.share
             ),
@@ -11880,7 +11873,7 @@ class _AboutActivityState extends State<AboutActivity> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          FlatButton(
+          TextButton(
             child: Icon(
               Icons.info,
               color: Color.fromARGB(255, 255, 255, 255)
